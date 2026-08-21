@@ -9,12 +9,10 @@ import { Action } from '@/store/types';
 import { isPendingIncomingCall } from '@/services/incoming-direct-call-session.service';
 
 /** Emitted from Android native when a cancel push is intercepted in the background. */
-export const INCOMING_DIRECT_CALL_CANCELLED_NATIVE_EVENT =
-  'IncomingDirectCallCancelled';
+export const INCOMING_DIRECT_CALL_CANCELLED_NATIVE_EVENT = `IncomingDirectCallCancelled`;
 
 /** Emitted from JS to notify in-app UI (incoming call screen) that the call was cancelled. */
-export const INCOMING_DIRECT_CALL_CANCELLED_UI_EVENT =
-  'IncomingDirectCallUiCancelled';
+export const INCOMING_DIRECT_CALL_CANCELLED_UI_EVENT = `IncomingDirectCallUiCancelled`;
 
 const pendingCancelledBuzzIds = new Set<string>();
 const handlingCancelledBuzzIds = new Set<string>();

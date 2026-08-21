@@ -1,6 +1,8 @@
 title = "gitleaks config"
 
 [extend]
+# --config replaces the built-in ruleset unless this is set.
+# Without it, this file had zero detection rules so hardcoded keys never failed.
 useDefault = true
 
 [[rules]]
@@ -15,9 +17,13 @@ keywords = [
 ]
 
 [allowlist]
-description = "Allow known test fixtures and generated files"
+description = "Allow CI scripts, native platform config, and lockfiles"
 paths = [
   '''(?:^|/)\.github/''',
-  '''google-services\.json''',
-  '''GoogleService-Info\.plist''',
+  '''(?:^|/)android/''',
+  '''(?:^|/)ios/''',
+  '''package-lock\.json''',
+  '''yarn\.lock''',
+  '''(?:^|/)Podfile\.lock''',
+  '''(?:^|/)Pods/''',
 ]

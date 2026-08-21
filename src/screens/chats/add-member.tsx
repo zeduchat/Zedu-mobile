@@ -17,7 +17,7 @@ import { useDataContext } from '@/store/useDataContext';
 import { PostRequest } from '@/utils/requests';
 import { ACTIONS } from '@/store/types';
 
-const ALPHABETS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+import { ALPHABETS } from '@/utils/alphabet';
 
 export const AddMemberScreen = ({ navigation }: any) => {
   const sectionListRef = useRef<SectionList>(null);

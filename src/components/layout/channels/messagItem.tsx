@@ -21,6 +21,7 @@ import FastImage from 'react-native-fast-image';
 import { ShowNotify } from '@/components/ui/toast';
 import { AudioMessagePlayer } from '../chat/audio-message-player';
 import { parseMessageHtmlForRender } from '@/utils/message-text';
+import { ensureHttpsUrl } from '@/utils/link-url';
 import { ForwardedMessageBlock } from '../chat/forwarded-message-block';
 import {
   getForwardedMessageFromItem,
@@ -227,7 +228,7 @@ const MessageItem = ({
   const openMessageLink = async (url: string) => {
     if (!url) return;
 
-    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    const href = ensureHttpsUrl(url);
 
     try {
       const supported = await Linking.canOpenURL(href);

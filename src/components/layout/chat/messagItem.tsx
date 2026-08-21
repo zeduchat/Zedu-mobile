@@ -14,6 +14,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MediaViewer from './media-viewer';
 import moment from 'moment';
 import { normalize } from '@/utils/normalize';
+import { ensureHttpsUrl } from '@/utils/link-url';
 import { ACTIONS } from '@/store/types';
 import { parseMessageHtmlForRender } from '@/utils/message-text';
 import { ForwardedMessageBlock } from './forwarded-message-block';
@@ -240,7 +241,7 @@ const MessageItem = ({
   const openMessageLink = async (url: string) => {
     if (!url) return;
 
-    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    const href = ensureHttpsUrl(url);
 
     try {
       const supported = await Linking.canOpenURL(href);

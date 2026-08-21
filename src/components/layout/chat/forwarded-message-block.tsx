@@ -8,6 +8,7 @@ import { Colors } from '@/theme/colors';
 import { ForwardedMessageBlockData } from '@/utils/forward-message';
 import { parseMessageHtmlForRender } from '@/utils/message-text';
 import { ShowNotify } from '@/components/ui/toast';
+import { ensureHttpsUrl } from '@/utils/link-url';
 
 type Props = {
   data: ForwardedMessageBlockData;
@@ -45,7 +46,7 @@ export const ForwardedMessageBlock: React.FC<Props> = ({
   const openMessageLink = async (url: string) => {
     if (!url) return;
 
-    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    const href = ensureHttpsUrl(url);
 
     try {
       const supported = await Linking.canOpenURL(href);

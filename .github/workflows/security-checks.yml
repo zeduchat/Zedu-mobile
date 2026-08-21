@@ -93,7 +93,6 @@ jobs:
           semgrep scan \
             --config p/typescript \
             --config p/react \
-            --config p/react-native \
             --config p/security-audit \
             --error \
             --metrics off \

@@ -15,6 +15,9 @@ import { Colors } from '../theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import { OneSignal } from 'react-native-onesignal';
 import { requestAppPermissions } from '@/lib/permissions';
+import { CLIENT_URL } from '@env';
+
+const clientBaseUrl = (CLIENT_URL || 'https://zedu.chat').replace(/\/$/, '');
 
 const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -87,7 +90,7 @@ const WelcomeScreen: React.FC = () => {
           <AppText
             size={13}
             style={styles.linkText}
-            onPress={() => openURL('https://zedu.chat/policy')}
+            onPress={() => openURL(`${clientBaseUrl}/policy`)}
           >
             Privacy Policy
           </AppText>{' '}
@@ -95,7 +98,7 @@ const WelcomeScreen: React.FC = () => {
           <AppText
             size={13}
             style={styles.linkText}
-            onPress={() => openURL('https://zedu.chat/terms-of-service')}
+            onPress={() => openURL(`${clientBaseUrl}/terms-of-service`)}
           >
             Terms of Service
           </AppText>

@@ -15,7 +15,7 @@ import UseGetOrgMembers from '@/services/org/get-org-members';
 import { dmGroupUsersAlphabetically } from '@/utils/dm-grouping';
 import FastImage from 'react-native-fast-image';
 
-const ALPHABETS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+import { ALPHABETS } from '@/utils/alphabet';
 
 export const AddMembersToCall = ({
   onClose,

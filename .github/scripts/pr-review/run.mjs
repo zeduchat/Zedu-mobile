@@ -177,7 +177,8 @@ function extractHardcodedUrls(content) {
   const matches = content.match(HARDCODED_URL_RE) || [];
   return matches
     .map((url) => url.replace(/[.,;]+$/, ""))
-    .filter((url) => /^https?:\/\/[^/?#]+/i.test(url));
+    .filter((url) => /^https?:\/\/[^/?#]+/i.test(url))
+    .filter((url) => !url.includes("${"));
 }
 
 function isAllowedUrl(url, allowPatterns) {

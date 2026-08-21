@@ -13,6 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
 import moment from 'moment';
 import { normalize } from '@/utils/normalize';
+import { ensureHttpsUrl } from '@/utils/link-url';
 import MediaViewer from '../chat/media-viewer';
 import { useDataContext } from '@/store/useDataContext';
 import ReactionDetailsSheet from '../chat/reaction-details';
@@ -253,7 +254,7 @@ const MessageItem = ({
   const openMessageLink = async (url: string) => {
     if (!url) return;
 
-    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    const href = ensureHttpsUrl(url);
 
     try {
       const supported = await Linking.canOpenURL(href);

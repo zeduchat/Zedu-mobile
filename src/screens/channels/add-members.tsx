@@ -18,7 +18,7 @@ import { Colors } from '@/theme/colors';
 import { GetRequest, PostRequest } from '@/utils/requests';
 import { ACTIONS } from '@/store/types';
 
-const ALPHABETS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+import { ALPHABETS } from '@/utils/alphabet';
 
 export const AddMembersScreen = ({ navigation }: any) => {
   const sectionListRef = useRef<SectionList>(null);
