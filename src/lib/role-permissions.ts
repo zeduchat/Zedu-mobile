@@ -1,5 +1,8 @@
-
-import { fetchRolesAndPermissions, getPermissionKeyVariants, permissionListToArray } from '@/services/roles/roles-permissions.service';
+import {
+  fetchRolesAndPermissions,
+  getPermissionKeyVariants,
+  permissionListToArray,
+} from '@/services/roles/roles-permissions.service';
 import { OrgRole, SystemPermission } from '@/types/roles-permissions';
 
 // Populated from GET /roles
@@ -27,9 +30,11 @@ export const syncRolesAndPermissionsFromApi = async (): Promise<void> => {
     SYSTEM_ROLES = roles;
 
     const nextRolePermissions: Record<string, string[]> = {};
-    roles.forEach((role) => {
+    roles.forEach(role => {
       const roleKey = normalizeRoleKey(role.name);
-      nextRolePermissions[roleKey] = permissionListToArray(role.permissions?.permission_list);
+      nextRolePermissions[roleKey] = permissionListToArray(
+        role.permissions?.permission_list,
+      );
     });
 
     DEFAULT_ROLE_PERMISSIONS = nextRolePermissions;
@@ -38,12 +43,17 @@ export const syncRolesAndPermissionsFromApi = async (): Promise<void> => {
   return syncPromise;
 };
 
-const permissionKeyMatches = (grantedKey: string, requestedKey: string): boolean => {
+const permissionKeyMatches = (
+  grantedKey: string,
+  requestedKey: string,
+): boolean => {
   const grantedVariants = new Set([
     grantedKey,
     ...getPermissionKeyVariants(grantedKey),
   ]);
-  return getPermissionKeyVariants(requestedKey).some((variant) => grantedVariants.has(variant));
+  return getPermissionKeyVariants(requestedKey).some(variant =>
+    grantedVariants.has(variant),
+  );
 };
 
 /** Logged-in user's role from organisation payload (set on sign-in / switch org / profile refresh). */
@@ -56,12 +66,16 @@ export type OrgUserRole = {
   permission_list?: Record<string, boolean>;
 };
 
-export const getOrgUserRole = (orgData: { user_role?: OrgUserRole } | null | undefined): OrgUserRole | null => {
+export const getOrgUserRole = (
+  orgData: { user_role?: OrgUserRole } | null | undefined,
+): OrgUserRole | null => {
   return orgData?.user_role ?? null;
 };
 
 /** Match the user's assigned role to a role from GET /roles. */
-export const findUserOrgRole = (orgData: { user_role?: OrgUserRole } | null | undefined): OrgRole | undefined => {
+export const findUserOrgRole = (
+  orgData: { user_role?: OrgUserRole } | null | undefined,
+): OrgRole | undefined => {
   const userRole = getOrgUserRole(orgData);
   if (!userRole || SYSTEM_ROLES.length === 0) {
     return undefined;
@@ -69,7 +83,7 @@ export const findUserOrgRole = (orgData: { user_role?: OrgUserRole } | null | un
 
   const roleId = userRole.role_id;
   if (roleId) {
-    const byId = SYSTEM_ROLES.find((role) => String(role.id) === String(roleId));
+    const byId = SYSTEM_ROLES.find(role => String(role.id) === String(roleId));
     if (byId) {
       return byId;
     }
@@ -78,7 +92,9 @@ export const findUserOrgRole = (orgData: { user_role?: OrgUserRole } | null | un
   const roleName = userRole.role_name || userRole.name || userRole.role;
   if (roleName) {
     const normalized = normalizeRoleKey(roleName);
-    return SYSTEM_ROLES.find((role) => normalizeRoleKey(role.name) === normalized);
+    return SYSTEM_ROLES.find(
+      role => normalizeRoleKey(role.name) === normalized,
+    );
   }
 
   return undefined;
@@ -101,8 +117,10 @@ const intersectWithRoleTemplate = (
     return permissionKeys;
   }
   const allowed = new Set(template);
-  return permissionKeys.filter((key) =>
-    Array.from(allowed).some((allowedKey) => permissionKeyMatches(key, allowedKey)),
+  return permissionKeys.filter(key =>
+    Array.from(allowed).some(allowedKey =>
+      permissionKeyMatches(key, allowedKey),
+    ),
   );
 };
 
@@ -132,13 +150,19 @@ export const getEffectiveUserPermissions = (
     return [];
   }
 
-  if (userRole.permission_list && typeof userRole.permission_list === 'object') {
+  if (
+    userRole.permission_list &&
+    typeof userRole.permission_list === 'object'
+  ) {
     const fromList = permissionListToArray(userRole.permission_list);
     return intersectWithRoleTemplate(fromList, roleName);
   }
 
   if (Array.isArray(userRole.permissions)) {
-    return intersectWithRoleTemplate(userRole.permissions.filter(Boolean), roleName);
+    return intersectWithRoleTemplate(
+      userRole.permissions.filter(Boolean),
+      roleName,
+    );
   }
 
   if (userRole.permissions && typeof userRole.permissions === 'object') {
@@ -154,7 +178,7 @@ export const userCan = (
   permissionKey: string,
 ): boolean => {
   const enabled = getEffectiveUserPermissions(orgData);
-  return enabled.some((key) => permissionKeyMatches(key, permissionKey));
+  return enabled.some(key => permissionKeyMatches(key, permissionKey));
 };
 
 export function hasPermission(
@@ -171,18 +195,22 @@ export function hasPermission(
     const normalizedRole = role ? normalizeRoleKey(role) : undefined;
     if (normalizedRole && DEFAULT_ROLE_PERMISSIONS[normalizedRole]) {
       const allowed = new Set(DEFAULT_ROLE_PERMISSIONS[normalizedRole]);
-      const validated = permissionsArr.filter((p) => {
-        return Array.from(allowed).some((allowedKey) => permissionKeyMatches(p, allowedKey));
+      const validated = permissionsArr.filter(p => {
+        return Array.from(allowed).some(allowedKey =>
+          permissionKeyMatches(p, allowedKey),
+        );
       });
-      return validated.some((p) => permissionKeyMatches(p, permissionKey));
+      return validated.some(p => permissionKeyMatches(p, permissionKey));
     }
-    return permissionsArr.some((p) => permissionKeyMatches(p, permissionKey));
+    return permissionsArr.some(p => permissionKeyMatches(p, permissionKey));
   }
 
   if (permissionsArr == null && role) {
     const normalizedRole = normalizeRoleKey(role);
     const perms = DEFAULT_ROLE_PERMISSIONS[normalizedRole];
-    return perms ? perms.some((p) => permissionKeyMatches(p, permissionKey)) : false;
+    return perms
+      ? perms.some(p => permissionKeyMatches(p, permissionKey))
+      : false;
   }
 
   return false;

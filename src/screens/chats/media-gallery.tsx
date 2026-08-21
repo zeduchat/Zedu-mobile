@@ -19,7 +19,10 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import type { RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import Container from '@/components/layout/container';
-import { useChannelFiles, ChannelFileMediaItem } from '@/services/channels/channel-files';
+import {
+  useChannelFiles,
+  ChannelFileMediaItem,
+} from '@/services/channels/channel-files';
 
 type PreviewMediaItem = ChannelFileMediaItem;
 
@@ -114,10 +117,31 @@ const isDocumentItem = (item: PreviewMediaItem): boolean => {
   const fileType = (item.file_type || '').toLowerCase().trim();
   const linkExt = extensionFromFileLink(item.file_link);
   const mimeType = (item.mime_type || '').toLowerCase();
-  const docExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv'];
+  const docExtensions = [
+    'pdf',
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'ppt',
+    'pptx',
+    'txt',
+    'csv',
+  ];
 
-  if (mimeType.includes('pdf') || nameExt === 'pdf' || fileType === 'pdf' || linkExt === 'pdf') return true;
-  if (docExtensions.includes(nameExt) || docExtensions.includes(fileType) || docExtensions.includes(linkExt)) return true;
+  if (
+    mimeType.includes('pdf') ||
+    nameExt === 'pdf' ||
+    fileType === 'pdf' ||
+    linkExt === 'pdf'
+  )
+    return true;
+  if (
+    docExtensions.includes(nameExt) ||
+    docExtensions.includes(fileType) ||
+    docExtensions.includes(linkExt)
+  )
+    return true;
   if (
     mimeType.startsWith('application') &&
     !mimeType.startsWith('application/octet-stream')
@@ -139,11 +163,19 @@ const getDocumentVisual = (fileName: string, mime: string) => {
     return { icon: 'document-outline', color: '#2563EB' };
   }
 
-  if (['xls', 'xlsx', 'csv'].includes(ext) || mimeType.includes('sheet') || mimeType.includes('excel')) {
+  if (
+    ['xls', 'xlsx', 'csv'].includes(ext) ||
+    mimeType.includes('sheet') ||
+    mimeType.includes('excel')
+  ) {
     return { icon: 'grid-outline', color: '#16A34A' };
   }
 
-  if (['ppt', 'pptx'].includes(ext) || mimeType.includes('powerpoint') || mimeType.includes('presentation')) {
+  if (
+    ['ppt', 'pptx'].includes(ext) ||
+    mimeType.includes('powerpoint') ||
+    mimeType.includes('presentation')
+  ) {
     return { icon: 'easel-outline', color: '#EA580C' };
   }
 
@@ -165,7 +197,8 @@ const MediaTab: React.FC<MediaTabProps> = ({
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!onLoadMore) return;
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    const distanceFromBottom =
+      contentSize.height - layoutMeasurement.height - contentOffset.y;
     if (distanceFromBottom < 120) {
       onLoadMore();
     }
@@ -189,7 +222,7 @@ const MediaTab: React.FC<MediaTabProps> = ({
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        {media.map((item) => (
+        {media.map(item => (
           <TouchableOpacity
             key={item.id}
             style={styles.mediaItem}
@@ -198,14 +231,20 @@ const MediaTab: React.FC<MediaTabProps> = ({
           >
             {isAudioItem(item) ? (
               <View style={styles.audioPlaceholder}>
-                <Ionicons name="musical-notes" size={44} color={Colors.primary} />
+                <Ionicons
+                  name="musical-notes"
+                  size={44}
+                  color={Colors.primary}
+                />
               </View>
             ) : isDocumentItem(item) ? (
               <View style={styles.docGridPlaceholder}>
                 <Ionicons
                   name={getDocumentVisual(item.file_name, item.mime_type).icon}
                   size={36}
-                  color={getDocumentVisual(item.file_name, item.mime_type).color}
+                  color={
+                    getDocumentVisual(item.file_name, item.mime_type).color
+                  }
                 />
               </View>
             ) : isVideoItem(item) ? (
@@ -213,7 +252,11 @@ const MediaTab: React.FC<MediaTabProps> = ({
                 <Ionicons name="play" size={32} color="#FFF" />
               </View>
             ) : (
-              <FastImage source={{ uri: item.file_link }} style={styles.mediaImage} resizeMode={FastImage.resizeMode.cover} />
+              <FastImage
+                source={{ uri: item.file_link }}
+                style={styles.mediaImage}
+                resizeMode={FastImage.resizeMode.cover}
+              />
             )}
           </TouchableOpacity>
         ))}
@@ -236,11 +279,19 @@ type ListTabProps = {
   renderRow: (item: PreviewMediaItem) => React.ReactNode;
 };
 
-const ListTab: React.FC<ListTabProps> = ({ items, loading, loadingMore, onLoadMore, emptyText, renderRow }) => {
+const ListTab: React.FC<ListTabProps> = ({
+  items,
+  loading,
+  loadingMore,
+  onLoadMore,
+  emptyText,
+  renderRow,
+}) => {
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!onLoadMore) return;
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    const distanceFromBottom =
+      contentSize.height - layoutMeasurement.height - contentOffset.y;
     if (distanceFromBottom < 120) {
       onLoadMore();
     }
@@ -263,7 +314,7 @@ const ListTab: React.FC<ListTabProps> = ({ items, loading, loadingMore, onLoadMo
       {items.length === 0 && (
         <AppText style={styles.emptyText}>{emptyText}</AppText>
       )}
-      {items.map((item) => renderRow(item))}
+      {items.map(item => renderRow(item))}
       {loadingMore && (
         <ActivityIndicator color={Colors.primary} style={styles.footerLoader} />
       )}
@@ -279,7 +330,10 @@ const TAB_LIST = [
   { key: 'documents', label: 'Documents' },
 ] as const;
 
-const TAB_QUERY_PARAM: Record<(typeof TAB_LIST)[number]['key'], string | undefined> = {
+const TAB_QUERY_PARAM: Record<
+  (typeof TAB_LIST)[number]['key'],
+  string | undefined
+> = {
   all: undefined,
   images: 'images',
   videos: 'videos',
@@ -287,11 +341,15 @@ const TAB_QUERY_PARAM: Record<(typeof TAB_LIST)[number]['key'], string | undefin
   documents: 'documents',
 };
 
-const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ route, navigation }) => {
+const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({
+  route,
+  navigation,
+}) => {
   const { preview_media = [], channel_id } = route.params || {};
   const usesChannelApi = Boolean(channel_id);
 
-  const [activeTab, setActiveTab] = React.useState<(typeof TAB_LIST)[number]['key']>('all');
+  const [activeTab, setActiveTab] =
+    React.useState<(typeof TAB_LIST)[number]['key']>('all');
   const fileTypeQuery = TAB_QUERY_PARAM[activeTab];
 
   const {
@@ -306,10 +364,14 @@ const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ route, navigati
 
   type TabKey = (typeof TAB_LIST)[number]['key'];
   const tabScrollRef = useRef<ScrollView>(null);
-  const tabLayoutsRef = useRef<Record<TabKey, { x: number; width: number }>>({} as Record<TabKey, { x: number; width: number }>);
+  const tabLayoutsRef = useRef<Record<TabKey, { x: number; width: number }>>(
+    {} as Record<TabKey, { x: number; width: number }>,
+  );
   const underlineLeft = useRef(new Animated.Value(0)).current;
   const underlineWidth = useRef(new Animated.Value(0)).current;
-  const [previewItem, setPreviewItem] = React.useState<PreviewMediaItem | null>(null);
+  const [previewItem, setPreviewItem] = React.useState<PreviewMediaItem | null>(
+    null,
+  );
 
   const animateUnderlineToTab = (tabKey: TabKey) => {
     const layout = tabLayoutsRef.current[tabKey];
@@ -362,16 +424,23 @@ const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ route, navigati
   return (
     <Container>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.iconBtn}
+        >
           <Ionicons name="arrow-back" size={24} color="#222" />
         </TouchableOpacity>
-        <AppText variant="bold" style={styles.headerTitle}>Media, Links & Docs</AppText>
+        <AppText variant="bold" style={styles.headerTitle}>
+          Media, Links & Docs
+        </AppText>
         <View style={{ width: 32 }} />
       </View>
 
       {usesChannelApi && channelError ? (
         <View style={styles.loadingWrap}>
-          <AppText size={13} style={styles.emptyText}>{channelError}</AppText>
+          <AppText size={13} style={styles.emptyText}>
+            {channelError}
+          </AppText>
         </View>
       ) : (
         <>
@@ -384,15 +453,22 @@ const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ route, navigati
                 bounces={false}
                 contentContainerStyle={styles.customTabScrollContent}
               >
-                {TAB_LIST.map((tab) => (
+                {TAB_LIST.map(tab => (
                   <TouchableOpacity
                     key={tab.key}
                     style={styles.customTabBtn}
                     activeOpacity={0.7}
                     onPress={() => setActiveTab(tab.key)}
-                    onLayout={(event) => handleTabLayout(tab.key, event)}
+                    onLayout={event => handleTabLayout(tab.key, event)}
                   >
-                    <AppText style={[styles.customTabLabel, activeTab === tab.key && styles.customTabLabelActive]}>{tab.label}</AppText>
+                    <AppText
+                      style={[
+                        styles.customTabLabel,
+                        activeTab === tab.key && styles.customTabLabelActive,
+                      ]}
+                    >
+                      {tab.label}
+                    </AppText>
                   </TouchableOpacity>
                 ))}
                 <Animated.View
@@ -425,15 +501,21 @@ const MediaGalleryScreen: React.FC<MediaGalleryScreenProps> = ({ route, navigati
                 loadingMore={tabLoadingMore}
                 onLoadMore={tabLoadMore}
                 emptyText="No documents found"
-                renderRow={(item) => (
+                renderRow={item => (
                   <TouchableOpacity key={item.id} style={styles.docItem}>
                     <Ionicons
-                      name={getDocumentVisual(item.file_name, item.mime_type).icon}
+                      name={
+                        getDocumentVisual(item.file_name, item.mime_type).icon
+                      }
                       size={22}
-                      color={getDocumentVisual(item.file_name, item.mime_type).color}
+                      color={
+                        getDocumentVisual(item.file_name, item.mime_type).color
+                      }
                       style={{ marginRight: 10 }}
                     />
-                    <AppText style={styles.docText} numberOfLines={1}>{item.file_name || item.file_link}</AppText>
+                    <AppText style={styles.docText} numberOfLines={1}>
+                      {item.file_name || item.file_link}
+                    </AppText>
                   </TouchableOpacity>
                 )}
               />
@@ -462,7 +544,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E9EDEF',
     elevation: 2,
   },
-  iconBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
+  iconBtn: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, color: '#222' },
   customTabBarContainer: {
     backgroundColor: '#FFF',

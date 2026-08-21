@@ -17,7 +17,11 @@ type UseFoldersOptions = {
   enabled?: boolean;
 };
 
-const useFolders = ({ mode, limit = 200, enabled = true }: UseFoldersOptions) => {
+const useFolders = ({
+  mode,
+  limit = 200,
+  enabled = true,
+}: UseFoldersOptions) => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -25,36 +29,45 @@ const useFolders = ({ mode, limit = 200, enabled = true }: UseFoldersOptions) =>
   const [pagination, setPagination] = useState<FoldersPagination | null>(null);
   const [page, setPage] = useState(1);
 
-  const fetchFolders = useCallback(async (pageNum: number, isRefresh = false) => {
-    if (!enabled) return;
+  const fetchFolders = useCallback(
+    async (pageNum: number, isRefresh = false) => {
+      if (!enabled) return;
 
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
-
-    const apiMode = fileModeToApiMode(mode);
-    const { data, error: requestError } = await GetRequest<{
-      data: { folders: Folder[]; pagination: FoldersPagination };
-    }>(`/files/folders?mode=${apiMode}&limit=${limit}&page=${pageNum}`);
-
-    if (requestError) {
-      setError(typeof requestError === 'string' ? requestError : 'Failed to load folders');
-      if (isRefresh || pageNum === 1) {
-        setFolders([]);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
       }
-    } else {
-      const nextFolders = data?.data?.folders || [];
-      setPagination(data?.data?.pagination || null);
-      setFolders((prev) => (pageNum === 1 ? nextFolders : [...prev, ...nextFolders]));
-      setPage(pageNum);
-    }
+      setError(null);
 
-    setLoading(false);
-    setRefreshing(false);
-  }, [enabled, limit, mode]);
+      const apiMode = fileModeToApiMode(mode);
+      const { data, error: requestError } = await GetRequest<{
+        data: { folders: Folder[]; pagination: FoldersPagination };
+      }>(`/files/folders?mode=${apiMode}&limit=${limit}&page=${pageNum}`);
+
+      if (requestError) {
+        setError(
+          typeof requestError === 'string'
+            ? requestError
+            : 'Failed to load folders',
+        );
+        if (isRefresh || pageNum === 1) {
+          setFolders([]);
+        }
+      } else {
+        const nextFolders = data?.data?.folders || [];
+        setPagination(data?.data?.pagination || null);
+        setFolders(prev =>
+          pageNum === 1 ? nextFolders : [...prev, ...nextFolders],
+        );
+        setPage(pageNum);
+      }
+
+      setLoading(false);
+      setRefreshing(false);
+    },
+    [enabled, limit, mode],
+  );
 
   useEffect(() => {
     if (!enabled) {
@@ -68,12 +81,15 @@ const useFolders = ({ mode, limit = 200, enabled = true }: UseFoldersOptions) =>
 
   const loadMore = useCallback(() => {
     if (loading || refreshing || !pagination) return;
-    const totalPages = pagination.page_count || pagination.total_pages_count || 1;
+    const totalPages =
+      pagination.page_count || pagination.total_pages_count || 1;
     if (page >= totalPages) return;
     fetchFolders(page + 1);
   }, [fetchFolders, loading, page, pagination, refreshing]);
 
-  const hasMore = pagination ? page < (pagination.page_count || pagination.total_pages_count || 1) : false;
+  const hasMore = pagination
+    ? page < (pagination.page_count || pagination.total_pages_count || 1)
+    : false;
 
   return {
     folders,

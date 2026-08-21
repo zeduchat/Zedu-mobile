@@ -4,32 +4,32 @@ import { AppText } from '@/components/ui/text';
 import { getUserStatusIcon, UserStatusSource } from '@/utils/user-status';
 
 interface UserStatusIconProps {
-    user?: UserStatusSource | null;
-    size?: number;
-    style?: ViewStyle;
+  user?: UserStatusSource | null;
+  size?: number;
+  style?: ViewStyle;
 }
 
 export const UserStatusIcon = ({
-    user,
-    size = 16,
-    style,
+  user,
+  size = 16,
+  style,
 }: UserStatusIconProps) => {
-    const icon = useMemo(() => getUserStatusIcon(user), [user]);
+  const icon = useMemo(() => getUserStatusIcon(user), [user]);
 
-    if (!icon) {
-        return null;
-    }
+  if (!icon) {
+    return null;
+  }
 
-    return (
-        <View style={[styles.container, style]}>
-            <AppText style={{ fontSize: size }}>{icon}</AppText>
-        </View>
-    );
+  return (
+    <View style={[styles.container, style]}>
+      <AppText style={{ fontSize: size }}>{icon}</AppText>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+  container: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

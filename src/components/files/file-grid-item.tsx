@@ -43,7 +43,12 @@ const FileGridItem: React.FC<FileGridItemProps> = ({
       delayLongPress={350}
     >
       {selectionMode && (
-        <View style={[styles.selectionBadge, isSelected && styles.selectionBadgeActive]}>
+        <View
+          style={[
+            styles.selectionBadge,
+            isSelected && styles.selectionBadgeActive,
+          ]}
+        >
           {isSelected && <Ionicons name="checkmark" size={14} color="#FFF" />}
         </View>
       )}
@@ -66,14 +71,21 @@ const FileGridItem: React.FC<FileGridItemProps> = ({
           resizeMode={FastImage.resizeMode.cover}
         />
       ) : (
-        <View style={[styles.gridPlaceholder, { backgroundColor: `${theme.color}18` }]}>
+        <View
+          style={[
+            styles.gridPlaceholder,
+            { backgroundColor: `${theme.color}18` },
+          ]}
+        >
           <Ionicons name={theme.icon} size={34} color={theme.color} />
         </View>
       )}
       <AppText size={12} numberOfLines={2} style={styles.gridName}>
         {decodeFileName(file.file_name)}
       </AppText>
-      <AppText size={11} style={styles.gridSize}>{formatFileSize(file.size)}</AppText>
+      <AppText size={11} style={styles.gridSize}>
+        {formatFileSize(file.size)}
+      </AppText>
     </TouchableOpacity>
   );
 };

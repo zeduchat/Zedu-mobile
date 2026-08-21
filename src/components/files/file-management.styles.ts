@@ -14,7 +14,12 @@ export const fileManagementStyles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E9EDEF',
   },
-  iconBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
+  iconBtn: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, color: '#222' },
   contentArea: {
     flex: 1,

@@ -40,15 +40,25 @@ const MoveToFolderSheet: React.FC<MoveToFolderSheetProps> = ({
   const filteredFolders = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return folders;
-    return folders.filter((folder) => folder.name.toLowerCase().includes(query));
+    return folders.filter(folder => folder.name.toLowerCase().includes(query));
   }, [folders, search]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={isMoving ? undefined : onClose}>
-        <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <Pressable
+        style={styles.backdrop}
+        onPress={isMoving ? undefined : onClose}
+      >
+        <Pressable style={styles.container} onPress={e => e.stopPropagation()}>
           <View style={styles.handle} />
-          <AppText variant="bold" size={17} style={styles.title}>Move to folder</AppText>
+          <AppText variant="bold" size={17} style={styles.title}>
+            Move to folder
+          </AppText>
           <AppText size={14} style={styles.subtitle}>
             {selectedCount} file{selectedCount === 1 ? '' : 's'} selected
           </AppText>
@@ -72,10 +82,12 @@ const MoveToFolderSheet: React.FC<MoveToFolderSheetProps> = ({
             <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
               {filteredFolders.length === 0 ? (
                 <View style={styles.empty}>
-                  <AppText size={14} style={styles.emptyText}>No folders found</AppText>
+                  <AppText size={14} style={styles.emptyText}>
+                    No folders found
+                  </AppText>
                 </View>
               ) : (
-                filteredFolders.map((folder) => {
+                filteredFolders.map(folder => {
                   const isSelectedFolder = movingFolderId === folder.id;
 
                   return (
@@ -86,18 +98,31 @@ const MoveToFolderSheet: React.FC<MoveToFolderSheetProps> = ({
                       disabled={isMoving}
                     >
                       <View style={styles.folderIcon}>
-                        <Ionicons name="folder" size={18} color={Colors.primary} />
+                        <Ionicons
+                          name="folder"
+                          size={18}
+                          color={Colors.primary}
+                        />
                       </View>
                       <View style={styles.folderInfo}>
-                        <AppText size={15} style={styles.folderName}>{folder.name}</AppText>
+                        <AppText size={15} style={styles.folderName}>
+                          {folder.name}
+                        </AppText>
                         <AppText size={12} style={styles.folderCount}>
                           {formatItemCount(folder.item_count)}
                         </AppText>
                       </View>
                       {isSelectedFolder ? (
-                        <ActivityIndicator color={Colors.primary} size="small" />
+                        <ActivityIndicator
+                          color={Colors.primary}
+                          size="small"
+                        />
                       ) : (
-                        <Ionicons name="chevron-forward" size={16} color="#C4C4C6" />
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#C4C4C6"
+                        />
                       )}
                     </TouchableOpacity>
                   );

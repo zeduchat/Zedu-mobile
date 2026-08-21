@@ -1,82 +1,85 @@
-import { useState, useCallback, useEffect } from "react";
-import { ACTIONS } from "@/store/types";
-import { useDataContext } from "@/store/useDataContext";
-import { GetRequest } from "@/utils/requests";
-import { useFocusEffect } from "@react-navigation/native";
+import { useState, useCallback, useEffect } from 'react';
+import { ACTIONS } from '@/store/types';
+import { useDataContext } from '@/store/useDataContext';
+import { GetRequest } from '@/utils/requests';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface Props {
-    channel_id: string;
+  channel_id: string;
 }
 
 const UseGroupChatDetails = ({ channel_id }: Props) => {
-    const { state, dispatch } = useDataContext();
-    const [page, setPage] = useState(1);
-    const [isFetchingMore, setIsFetchingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
+  const { state, dispatch } = useDataContext();
+  const [page, setPage] = useState(1);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-    const fetchFirstPage = useCallback(async () => {
-        const { data, error } = await GetRequest(`/group-dms/channels/${channel_id}/threads?page=1&limit=50`);
-        if (!error) {
-            dispatch({
-                type: ACTIONS.DMS_CHAT, payload: {
-                    data: data.data,
-                    page: 1
-                }
-            });
-            setPage(1);
-            setHasMore(true);
-        }
-    }, [channel_id, dispatch]);
-
-    useEffect(() => {
-        fetchFirstPage()
-    }, [state?.callback, fetchFirstPage])
-
-    useFocusEffect(
-        useCallback(() => {
-            fetchFirstPage();
-        }, [fetchFirstPage])
+  const fetchFirstPage = useCallback(async () => {
+    const { data, error } = await GetRequest(
+      `/group-dms/channels/${channel_id}/threads?page=1&limit=50`,
     );
+    if (!error) {
+      dispatch({
+        type: ACTIONS.DMS_CHAT,
+        payload: {
+          data: data.data,
+          page: 1,
+        },
+      });
+      setPage(1);
+      setHasMore(true);
+    }
+  }, [channel_id, dispatch]);
 
-    const loadMore = useCallback(async () => {
-        if (isFetchingMore || !hasMore || state?.dmsChat?.length < 50) return;
+  useEffect(() => {
+    fetchFirstPage();
+  }, [state?.callback, fetchFirstPage]);
 
-        setIsFetchingMore(true);
-        const nextPage = page + 1;
+  useFocusEffect(
+    useCallback(() => {
+      fetchFirstPage();
+    }, [fetchFirstPage]),
+  );
 
-        try {
-            const { data, error } = await GetRequest(
-                `/group-dms/channels/${channel_id}/threads?page=${nextPage}&limit=50`
-            );
+  const loadMore = useCallback(async () => {
+    if (isFetchingMore || !hasMore || state?.dmsChat?.length < 50) return;
 
-            if (!error && data?.data) {
-                const freshMessages = data.data;
-                const paginationDetails = data.pagination[0];
+    setIsFetchingMore(true);
+    const nextPage = page + 1;
 
-                dispatch({
-                    type: ACTIONS.DMS_CHAT,
-                    payload: {
-                        data: freshMessages,
-                        page: nextPage
-                    }
-                });
+    try {
+      const { data, error } = await GetRequest(
+        `/group-dms/channels/${channel_id}/threads?page=${nextPage}&limit=50`,
+      );
 
-                setPage(nextPage);
+      if (!error && data?.data) {
+        const freshMessages = data.data;
+        const paginationDetails = data.pagination[0];
 
-                if (nextPage >= (paginationDetails?.total_pages_count || 0)) {
-                    setHasMore(false);
-                }
-            } else {
-                setHasMore(false);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsFetchingMore(false);
+        dispatch({
+          type: ACTIONS.DMS_CHAT,
+          payload: {
+            data: freshMessages,
+            page: nextPage,
+          },
+        });
+
+        setPage(nextPage);
+
+        if (nextPage >= (paginationDetails?.total_pages_count || 0)) {
+          setHasMore(false);
         }
-    }, [channel_id, page, isFetchingMore, hasMore, dispatch]);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsFetchingMore(false);
+    }
+  }, [channel_id, page, isFetchingMore, hasMore, dispatch]);
 
-    return { loadMore, isFetchingMore };
+  return { loadMore, isFetchingMore };
 };
 
 export default UseGroupChatDetails;

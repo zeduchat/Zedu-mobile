@@ -39,11 +39,23 @@ const RenameFileModal: React.FC<RenameFileModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={loading ? undefined : onClose}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-          <AppText variant="bold" size={18} style={styles.title}>Rename file</AppText>
-          <AppText size={14} style={styles.subtitle}>Enter a new name for this file.</AppText>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable
+        style={styles.backdrop}
+        onPress={loading ? undefined : onClose}
+      >
+        <Pressable style={styles.card} onPress={e => e.stopPropagation()}>
+          <AppText variant="bold" size={18} style={styles.title}>
+            Rename file
+          </AppText>
+          <AppText size={14} style={styles.subtitle}>
+            Enter a new name for this file.
+          </AppText>
 
           <TextInput
             value={name}
@@ -56,18 +68,29 @@ const RenameFileModal: React.FC<RenameFileModalProps> = ({
           />
 
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={loading}>
-              <AppText variant="medium" size={15} style={styles.cancelText}>Cancel</AppText>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={onClose}
+              disabled={loading}
+            >
+              <AppText variant="medium" size={15} style={styles.cancelText}>
+                Cancel
+              </AppText>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.saveBtn, (!name.trim() || loading) && styles.saveBtnDisabled]}
+              style={[
+                styles.saveBtn,
+                (!name.trim() || loading) && styles.saveBtnDisabled,
+              ]}
               onPress={handleSubmit}
               disabled={!name.trim() || loading}
             >
               {loading ? (
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
-                <AppText variant="bold" size={15} style={styles.saveText}>Save</AppText>
+                <AppText variant="bold" size={15} style={styles.saveText}>
+                  Save
+                </AppText>
               )}
             </TouchableOpacity>
           </View>

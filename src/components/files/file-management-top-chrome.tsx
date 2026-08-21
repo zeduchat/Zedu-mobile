@@ -10,7 +10,11 @@ import {
   FileCategory,
   FileMode,
 } from '@/utils/file-helpers';
-import { ActiveFilterSheet, DateFilterKey, FileManagementTab } from '@/types/file-management';
+import {
+  ActiveFilterSheet,
+  DateFilterKey,
+  FileManagementTab,
+} from '@/types/file-management';
 import { fileManagementStyles as styles } from './file-management.styles';
 
 type FilterChipProps = {
@@ -25,10 +29,17 @@ const FilterChip: React.FC<FilterChipProps> = ({ label, active, onPress }) => (
     onPress={onPress}
     activeOpacity={0.8}
   >
-    <AppText size={13} style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+    <AppText
+      size={13}
+      style={[styles.filterChipText, active && styles.filterChipTextActive]}
+    >
       {label}
     </AppText>
-    <Ionicons name="chevron-down" size={14} color={active ? Colors.primary : '#667781'} />
+    <Ionicons
+      name="chevron-down"
+      size={14}
+      color={active ? Colors.primary : '#667781'}
+    />
   </TouchableOpacity>
 );
 
@@ -67,7 +78,7 @@ const FileManagementTopChrome: React.FC<FileManagementTopChromeProps> = ({
         bounces={false}
         contentContainerStyle={styles.modeScrollContent}
       >
-        {FILE_MODE_OPTIONS.map((option) => {
+        {FILE_MODE_OPTIONS.map(option => {
           const active = mode === option.key;
           return (
             <TouchableOpacity
@@ -78,7 +89,10 @@ const FileManagementTopChrome: React.FC<FileManagementTopChromeProps> = ({
               <AppText
                 size={13}
                 variant={active ? 'bold' : 'regular'}
-                style={[styles.modeChipText, active && styles.modeChipTextActive]}
+                style={[
+                  styles.modeChipText,
+                  active && styles.modeChipTextActive,
+                ]}
               >
                 {option.label}
               </AppText>
@@ -93,7 +107,9 @@ const FileManagementTopChrome: React.FC<FileManagementTopChromeProps> = ({
       <TextInput
         value={searchQuery}
         onChangeText={onSearchChange}
-        placeholder={isFoldersTab ? 'Search folders...' : 'Search files by name...'}
+        placeholder={
+          isFoldersTab ? 'Search folders...' : 'Search files by name...'
+        }
         placeholderTextColor="#8696A0"
         style={styles.searchInput}
         autoCapitalize="none"
@@ -112,7 +128,8 @@ const FileManagementTopChrome: React.FC<FileManagementTopChromeProps> = ({
           <FilterChip
             label={
               fileTypeFilter
-                ? FILE_CATEGORY_OPTIONS.find((o) => o.key === fileTypeFilter)?.label || 'File Type'
+                ? FILE_CATEGORY_OPTIONS.find(o => o.key === fileTypeFilter)
+                    ?.label || 'File Type'
                 : 'File Type'
             }
             active={Boolean(fileTypeFilter)}
@@ -125,7 +142,10 @@ const FileManagementTopChrome: React.FC<FileManagementTopChromeProps> = ({
           onPress={() => onOpenFilterSheet('user')}
         />
         <FilterChip
-          label={DATE_MODIFIED_OPTIONS.find((o) => o.key === dateFilter)?.label || 'Date Modified'}
+          label={
+            DATE_MODIFIED_OPTIONS.find(o => o.key === dateFilter)?.label ||
+            'Date Modified'
+          }
           active={dateFilter !== 'any'}
           onPress={() => onOpenFilterSheet('date')}
         />
@@ -134,19 +154,31 @@ const FileManagementTopChrome: React.FC<FileManagementTopChromeProps> = ({
 
     <View style={styles.toolbar}>
       <View style={styles.tabs}>
-        <TouchableOpacity onPress={() => onTabChange('folders')} style={styles.tabBtn}>
+        <TouchableOpacity
+          onPress={() => onTabChange('folders')}
+          style={styles.tabBtn}
+        >
           <AppText
             variant={activeTab === 'folders' ? 'bold' : 'regular'}
-            style={[styles.tabText, activeTab === 'folders' && styles.tabTextActive]}
+            style={[
+              styles.tabText,
+              activeTab === 'folders' && styles.tabTextActive,
+            ]}
           >
             Folders
           </AppText>
           {activeTab === 'folders' && <View style={styles.tabUnderline} />}
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => onTabChange('files')} style={styles.tabBtn}>
+        <TouchableOpacity
+          onPress={() => onTabChange('files')}
+          style={styles.tabBtn}
+        >
           <AppText
             variant={activeTab === 'files' ? 'bold' : 'regular'}
-            style={[styles.tabText, activeTab === 'files' && styles.tabTextActive]}
+            style={[
+              styles.tabText,
+              activeTab === 'files' && styles.tabTextActive,
+            ]}
           >
             Files
           </AppText>
@@ -154,8 +186,13 @@ const FileManagementTopChrome: React.FC<FileManagementTopChromeProps> = ({
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.sortBtn} onPress={() => onOpenFilterSheet('sort')}>
-        <AppText size={13} style={styles.sortText}>Sort</AppText>
+      <TouchableOpacity
+        style={styles.sortBtn}
+        onPress={() => onOpenFilterSheet('sort')}
+      >
+        <AppText size={13} style={styles.sortText}>
+          Sort
+        </AppText>
         <Ionicons name="chevron-down" size={14} color="#667781" />
       </TouchableOpacity>
     </View>

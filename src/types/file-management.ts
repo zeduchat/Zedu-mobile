@@ -1,8 +1,16 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FileStackParamList } from '@/navigation/stacks/files';
-import { DATE_MODIFIED_OPTIONS, FileCategory, FileMode, FileSortOption } from '@/utils/file-helpers';
+import {
+  DATE_MODIFIED_OPTIONS,
+  FileCategory,
+  FileMode,
+  FileSortOption,
+} from '@/utils/file-helpers';
 
-export type FileManagementNavigation = StackNavigationProp<FileStackParamList, 'FileManagement'>;
+export type FileManagementNavigation = StackNavigationProp<
+  FileStackParamList,
+  'FileManagement'
+>;
 
 export type FileManagementTab = 'folders' | 'files';
 

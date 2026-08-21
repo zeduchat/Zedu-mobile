@@ -1,5 +1,12 @@
 import React, { useMemo } from 'react';
-import { Modal, Pressable, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { AppText } from '@/components/ui/text';
 import { Colors } from '@/theme/colors';
@@ -72,9 +79,14 @@ const FileFilterSheet: React.FC<FileFilterSheetProps> = ({
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.sheetBackdrop} onPress={onClose}>
-        <Pressable style={styles.sheetContainer} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={styles.sheetContainer}
+          onPress={e => e.stopPropagation()}
+        >
           <View style={styles.sheetHandle} />
-          <AppText variant="bold" size={17} style={styles.sheetTitle}>{title}</AppText>
+          <AppText variant="bold" size={17} style={styles.sheetTitle}>
+            {title}
+          </AppText>
 
           {activeSheet === 'user' && (
             <View style={styles.sheetSearchWrap}>
@@ -92,7 +104,10 @@ const FileFilterSheet: React.FC<FileFilterSheetProps> = ({
             </View>
           )}
 
-          <ScrollView style={styles.sheetList} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            style={styles.sheetList}
+            keyboardShouldPersistTaps="handled"
+          >
             {activeSheet === 'type' && (
               <>
                 <TouchableOpacity
@@ -100,19 +115,39 @@ const FileFilterSheet: React.FC<FileFilterSheetProps> = ({
                   onPress={() => closeAnd(() => onFileTypeFilterChange(null))}
                 >
                   <Ionicons name="document-outline" size={18} color="#667781" />
-                  <AppText size={15} style={styles.sheetItemText}>All types</AppText>
-                  {!fileTypeFilter && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
+                  <AppText size={15} style={styles.sheetItemText}>
+                    All types
+                  </AppText>
+                  {!fileTypeFilter && (
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={Colors.primary}
+                    />
+                  )}
                 </TouchableOpacity>
-                {FILE_CATEGORY_OPTIONS.map((option) => (
+                {FILE_CATEGORY_OPTIONS.map(option => (
                   <TouchableOpacity
                     key={option.key}
                     style={styles.sheetItem}
-                    onPress={() => closeAnd(() => onFileTypeFilterChange(option.key))}
+                    onPress={() =>
+                      closeAnd(() => onFileTypeFilterChange(option.key))
+                    }
                   >
-                    <Ionicons name="document-outline" size={18} color="#667781" />
-                    <AppText size={15} style={styles.sheetItemText}>{option.label}</AppText>
+                    <Ionicons
+                      name="document-outline"
+                      size={18}
+                      color="#667781"
+                    />
+                    <AppText size={15} style={styles.sheetItemText}>
+                      {option.label}
+                    </AppText>
                     {fileTypeFilter === option.key && (
-                      <Ionicons name="checkmark" size={18} color={Colors.primary} />
+                      <Ionicons
+                        name="checkmark"
+                        size={18}
+                        color={Colors.primary}
+                      />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -125,60 +160,99 @@ const FileFilterSheet: React.FC<FileFilterSheetProps> = ({
                   style={styles.sheetItem}
                   onPress={() => closeAnd(() => onUploadedByFilterChange(null))}
                 >
-                  <AppText size={15} style={styles.sheetItemText}>Anyone</AppText>
-                  {!uploadedByFilter && <Ionicons name="checkmark" size={18} color={Colors.primary} />}
+                  <AppText size={15} style={styles.sheetItemText}>
+                    Anyone
+                  </AppText>
+                  {!uploadedByFilter && (
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={Colors.primary}
+                    />
+                  )}
                 </TouchableOpacity>
-                {sheetUsers.map((member) => {
+                {sheetUsers.map(member => {
                   const label = member.name || member.username || '';
                   return (
                     <TouchableOpacity
                       key={member.id}
                       style={styles.sheetItem}
-                      onPress={() => closeAnd(() => onUploadedByFilterChange(label))}
+                      onPress={() =>
+                        closeAnd(() => onUploadedByFilterChange(label))
+                      }
                     >
                       <View style={styles.sheetAvatar}>
                         <AppText variant="bold" size={11}>
                           {label.slice(0, 2).toUpperCase()}
                         </AppText>
                       </View>
-                      <AppText size={15} style={styles.sheetItemText}>{label}</AppText>
+                      <AppText size={15} style={styles.sheetItemText}>
+                        {label}
+                      </AppText>
                       {uploadedByFilter === label && (
-                        <Ionicons name="checkmark" size={18} color={Colors.primary} />
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color={Colors.primary}
+                        />
                       )}
                     </TouchableOpacity>
                   );
                 })}
-                <TouchableOpacity style={styles.sheetApplyBtn} onPress={applyOwnerFilter}>
-                  <AppText variant="bold" size={15} style={styles.sheetApplyText}>Apply filter</AppText>
+                <TouchableOpacity
+                  style={styles.sheetApplyBtn}
+                  onPress={applyOwnerFilter}
+                >
+                  <AppText
+                    variant="bold"
+                    size={15}
+                    style={styles.sheetApplyText}
+                  >
+                    Apply filter
+                  </AppText>
                 </TouchableOpacity>
               </>
             )}
 
-            {activeSheet === 'date' && DATE_MODIFIED_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.key}
-                style={styles.sheetItem}
-                onPress={() => closeAnd(() => onDateFilterChange(option.key))}
-              >
-                <AppText size={15} style={styles.sheetItemText}>{option.label}</AppText>
-                {dateFilter === option.key && (
-                  <Ionicons name="checkmark" size={18} color={Colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
+            {activeSheet === 'date' &&
+              DATE_MODIFIED_OPTIONS.map(option => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={styles.sheetItem}
+                  onPress={() => closeAnd(() => onDateFilterChange(option.key))}
+                >
+                  <AppText size={15} style={styles.sheetItemText}>
+                    {option.label}
+                  </AppText>
+                  {dateFilter === option.key && (
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={Colors.primary}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
 
-            {activeSheet === 'sort' && SORT_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.key}
-                style={styles.sheetItem}
-                onPress={() => closeAnd(() => onSortByChange(option.key))}
-              >
-                <AppText size={15} style={styles.sheetItemText}>{option.label}</AppText>
-                {sortBy === option.key && (
-                  <Ionicons name="checkmark" size={18} color={Colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
+            {activeSheet === 'sort' &&
+              SORT_OPTIONS.map(option => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={styles.sheetItem}
+                  onPress={() => closeAnd(() => onSortByChange(option.key))}
+                >
+                  <AppText size={15} style={styles.sheetItemText}>
+                    {option.label}
+                  </AppText>
+                  {sortBy === option.key && (
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={Colors.primary}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
           </ScrollView>
         </Pressable>
       </Pressable>

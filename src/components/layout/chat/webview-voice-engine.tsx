@@ -1,25 +1,27 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
+
+const NativeWebView = WebView as unknown as React.ComponentType<any>;
 import RNFS from 'react-native-fs';
 import { toFileUri } from '@/utils/voice-message';
 
 type WebViewVoiceEngineProps = {
-    localUri: string;
-    remoteUri?: string;
-    isPlaying: boolean;
-    shouldResume: boolean;
-    onReady: (durationMs: number) => void;
-    onProgress: (currentMs: number, durationMs: number) => void;
-    onEnded: () => void;
-    onError: () => void;
+  localUri: string;
+  remoteUri?: string;
+  isPlaying: boolean;
+  shouldResume: boolean;
+  onReady: (durationMs: number) => void;
+  onProgress: (currentMs: number, durationMs: number) => void;
+  onEnded: () => void;
+  onError: () => void;
 };
 
 type WebViewVoiceMessage =
-    | { type: 'ready'; duration: number }
-    | { type: 'progress'; current: number; duration: number }
-    | { type: 'ended' }
-    | { type: 'error' };
+  | { type: 'ready'; duration: number }
+  | { type: 'progress'; current: number; duration: number }
+  | { type: 'ended' }
+  | { type: 'error' };
 
 const buildVoiceHtml = (fileUri: string, remoteUri?: string) => `<!DOCTYPE html>
 <html>
@@ -80,98 +82,104 @@ const buildVoiceHtml = (fileUri: string, remoteUri?: string) => `<!DOCTYPE html>
 </html>`;
 
 export const WebViewVoiceEngine = ({
-    localUri,
-    remoteUri,
-    isPlaying,
-    shouldResume,
-    onReady,
-    onProgress,
-    onEnded,
-    onError,
+  localUri,
+  remoteUri,
+  isPlaying,
+  shouldResume,
+  onReady,
+  onProgress,
+  onEnded,
+  onError,
 }: WebViewVoiceEngineProps) => {
-    const webViewRef = useRef<WebView>(null);
-    const html = useMemo(() => buildVoiceHtml(toFileUri(localUri), remoteUri), [localUri, remoteUri]);
-    const readAccessUrl = useMemo(
-        () => (Platform.OS === 'ios' ? toFileUri(RNFS.CachesDirectoryPath) : undefined),
-        [],
-    );
+  const webViewRef = useRef<any>(null);
+  const html = useMemo(
+    () => buildVoiceHtml(toFileUri(localUri), remoteUri),
+    [localUri, remoteUri],
+  );
+  const readAccessUrl = useMemo(
+    () =>
+      Platform.OS === 'ios' ? toFileUri(RNFS.CachesDirectoryPath) : undefined,
+    [],
+  );
 
-    useEffect(() => {
-        if (!isPlaying) {
-            webViewRef.current?.injectJavaScript('window.pauseVoice && window.pauseVoice(); true;');
-        }
-    }, [isPlaying]);
+  useEffect(() => {
+    if (!isPlaying) {
+      webViewRef.current?.injectJavaScript(
+        'window.pauseVoice && window.pauseVoice(); true;',
+      );
+    }
+  }, [isPlaying]);
 
-    const injectPlaybackCommand = () => {
-        if (!isPlaying) {
-            return;
-        }
+  const injectPlaybackCommand = () => {
+    if (!isPlaying) {
+      return;
+    }
 
-        const command = shouldResume
-            ? 'window.playVoice && window.playVoice();'
-            : 'window.restartVoice && window.restartVoice();';
-        webViewRef.current?.injectJavaScript(`${command} true;`);
-    };
+    const command = shouldResume
+      ? 'window.playVoice && window.playVoice();'
+      : 'window.restartVoice && window.restartVoice();';
+    webViewRef.current?.injectJavaScript(`${command} true;`);
+  };
 
-    useEffect(() => {
-        injectPlaybackCommand();
-    }, [isPlaying, shouldResume]);
+  useEffect(() => {
+    injectPlaybackCommand();
+  }, [isPlaying, shouldResume]);
 
-    const handleMessage = (event: WebViewMessageEvent) => {
-        try {
-            const data = JSON.parse(event.nativeEvent.data) as WebViewVoiceMessage;
-            if (data.type === 'ready') {
-                onReady(data.duration);
-                return;
-            }
-            if (data.type === 'progress') {
-                onProgress(data.current, data.duration);
-                return;
-            }
-            if (data.type === 'ended') {
-                onEnded();
-                return;
-            }
-            if (data.type === 'error') {
-                onError();
-            }
-        } catch {
-            onError();
-        }
-    };
+  const handleMessage = (event: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data) as WebViewVoiceMessage;
+      if (data.type === 'ready') {
+        onReady(data.duration);
+        return;
+      }
+      if (data.type === 'progress') {
+        onProgress(data.current, data.duration);
+        return;
+      }
+      if (data.type === 'ended') {
+        onEnded();
+        return;
+      }
+      if (data.type === 'error') {
+        onError();
+      }
+    } catch {
+      onError();
+    }
+  };
 
-    return (
-        <View pointerEvents="none" style={styles.hidden}>
-            <WebView
-                ref={webViewRef}
-                source={{ html }}
-                onMessage={handleMessage}
-                onLoadEnd={injectPlaybackCommand}
-                originWhitelist={['*']}
-                allowingReadAccessToURL={readAccessUrl}
-                allowFileAccessFromFileURLs
-                allowUniversalAccessFromFileURLs
-                allowsInlineMediaPlayback
-                mediaPlaybackRequiresUserAction={false}
-                javaScriptEnabled
-                domStorageEnabled
-                scrollEnabled={false}
-                style={styles.webview}
-            />
-        </View>
-    );
+  return (
+    <View pointerEvents="none" style={styles.hidden}>
+      <NativeWebView
+        ref={webViewRef}
+        source={{ html }}
+        onMessage={handleMessage}
+        onLoadEnd={injectPlaybackCommand}
+        originWhitelist={['*']}
+        allowingReadAccessToURL={readAccessUrl}
+        allowFileAccessFromFileURLs
+        allowUniversalAccessFromFileURLs
+        allowsInlineMediaPlayback
+        mediaPlaybackRequiresUserAction={false}
+        javaScriptEnabled
+        domStorageEnabled
+        scrollEnabled={false}
+        style={styles.webview}
+      />
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    hidden: {
-        width: 0,
-        height: 0,
-        opacity: 0,
-        overflow: 'hidden',
-    },
-    webview: {
-        width: 1,
-        height: 1,
-        backgroundColor: 'transparent',
-    },
+  hidden: {
+    width: 0,
+    height: 0,
+    opacity: 0,
+    overflow: 'hidden',
+  },
+  webview: {
+    width: 1,
+    height: 1,
+    backgroundColor: 'transparent',
+  },
 });

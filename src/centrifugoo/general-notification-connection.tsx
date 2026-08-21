@@ -3,11 +3,10 @@ import { Centrifuge } from 'centrifuge';
 import axios from 'axios';
 import { useDataContext } from '@/store/useDataContext';
 import { BASE_URL, CONNECT_URL } from '@env';
-import { retrieveToken } from '@/utils/helper';
 import { ACTIONS } from '@/store/types';
 import {
-    handleIncomingDirectCallCancelled,
-    handleIncomingDirectCallAnsweredElsewhere,
+  handleIncomingDirectCallCancelled,
+  handleIncomingDirectCallAnsweredElsewhere,
 } from '@/services/incoming-direct-call-cancel.service';
 import { ShowNotify } from '@/components/ui/toast';
 import { parseOrganisationThreadsResponse } from '@/services/mentions/parse-organisation-threads';
@@ -16,30 +15,28 @@ import { parseOrganisationThreadsResponse } from '@/services/mentions/parse-orga
 
 export default function GeneralNotificationConnection() {
   const { state, dispatch } = useDataContext();
-  const { token, orgId, user, channel:myChannel } = state
+  const { token, orgId, user } = state;
   const participantsRef = useRef<any[]>(state?.buzzParticipants || []);
 
   useEffect(() => {
     participantsRef.current = state?.buzzParticipants || [];
   }, [state?.buzzParticipants]);
 
-
   const getConnectionToken = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/token/connection`, {
         headers: {
           Authorization: `Bearer ${state?.token}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
       return response.data.data.token;
     } catch (error) {
-      console.error("Centrifugo Conn Token Error:", error);
+      console.error('Centrifugo Conn Token Error:', error);
     }
   };
 
   const getSubscriptionToken = async (channel: string) => {
-
     try {
       const response = await axios.post(
         `${BASE_URL}/token/subscription`,
@@ -47,13 +44,13 @@ export default function GeneralNotificationConnection() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
-        }
+        },
       );
       return response.data.data.token;
     } catch (error) {
-      console.error("Centrifugo Sub Token Error:", error);
+      console.error('Centrifugo Sub Token Error:', error);
     }
   };
 
@@ -61,11 +58,9 @@ export default function GeneralNotificationConnection() {
   useEffect(() => {
     if (!orgId || !user?.user_id || !token) return;
 
+    const channel = `${orgId}/${user.user_id}`;
 
-    const channel = `${orgId}/${user.user_id}`
-
-    getSubscriptionToken(channel)
-
+    getSubscriptionToken(channel);
 
     // Initialize Centrifuge client
     const centrifugeClient: any = new Centrifuge(CONNECT_URL, {
@@ -83,18 +78,16 @@ export default function GeneralNotificationConnection() {
       getToken: getPersonalChannelSubscriptionToken,
     });
 
-
     // // message publishing
-    sub.on("publication", (ctx: any) => {
+    sub.on('publication', (ctx: any) => {
       const { data } = ctx;
 
       // console.log(data, 'general notification centrifugo')
 
-
       // Channels message count and mention highlight
       if (
-        data?.section === "channels_section" &&
-        data?.notification_type === "unread_thread_change"
+        data?.section === 'channels_section' &&
+        data?.notification_type === 'unread_thread_change'
       ) {
         const { channels_id, thread_count } = data.data;
 
@@ -108,11 +101,10 @@ export default function GeneralNotificationConnection() {
         });
       }
 
-
       // DM message count and mention highlight
       if (
-        data?.section === "dm_channels_section" &&
-        data?.notification_type === "unread_thread_change"
+        data?.section === 'dm_channels_section' &&
+        data?.notification_type === 'unread_thread_change'
       ) {
         const dmData = data.data;
 
@@ -123,10 +115,14 @@ export default function GeneralNotificationConnection() {
       }
 
       // mention thread section
-      if (data?.notification_type === "thread_notification" && data?.section === "thread_message") {
-        const { threads: incomingThreads, unseenThreadCount } = parseOrganisationThreadsResponse({
-          data: data?.data,
-        });
+      if (
+        data?.notification_type === 'thread_notification' &&
+        data?.section === 'thread_message'
+      ) {
+        const { threads: incomingThreads, unseenThreadCount } =
+          parseOrganisationThreadsResponse({
+            data: data?.data,
+          });
 
         dispatch({
           type: ACTIONS.UNSEEN_THREAD_COUNT,
@@ -136,9 +132,9 @@ export default function GeneralNotificationConnection() {
         if (incomingThreads.length > 0) {
           const existingMentions = [...(state.mentionsList || [])];
 
-          incomingThreads.forEach((newMention) => {
+          incomingThreads.forEach(newMention => {
             const existingIndex = existingMentions.findIndex(
-              (item) => item.thread_id === newMention.thread_id,
+              item => item.thread_id === newMention.thread_id,
             );
 
             if (existingIndex !== -1) {
@@ -155,23 +151,26 @@ export default function GeneralNotificationConnection() {
         }
       }
 
-      if (
-        data?.notification_type === 'direct_call_response'
-      ) {
+      if (data?.notification_type === 'direct_call_response') {
         const payload = data?.data;
         const currentParticipants = participantsRef.current || [];
         const buzzEventData = payload;
         const newUser = payload?.user_joined;
-        const rejectedUser = buzzEventData?.user_rejected || payload?.user_rejected;
-        const timeoutUser = buzzEventData?.user_timeout || payload?.user_timeout;
+        const rejectedUser =
+          buzzEventData?.user_rejected || payload?.user_rejected;
+        const timeoutUser =
+          buzzEventData?.user_timeout || payload?.user_timeout;
         const joinStatus = String(payload?.join_status || '').toLowerCase();
         const buzzId = payload?.buzz_id || '';
 
         if (
-          (joinStatus === 'cancel' || joinStatus === 'canceled' || joinStatus === 'cancelled')
-          && buzzId
+          (joinStatus === 'cancel' ||
+            joinStatus === 'canceled' ||
+            joinStatus === 'cancelled') &&
+          buzzId
         ) {
-          const isReceiver = String(payload?.caller_id || '') !== String(user?.user_id || '');
+          const isReceiver =
+            String(payload?.caller_id || '') !== String(user?.user_id || '');
 
           if (isReceiver) {
             handleIncomingDirectCallCancelled(buzzId, {
@@ -191,7 +190,10 @@ export default function GeneralNotificationConnection() {
           return;
         }
 
-        if ((joinStatus === 'accept' || joinStatus === 'accepted') && newUser?.user_id) {
+        if (
+          (joinStatus === 'accept' || joinStatus === 'accepted') &&
+          newUser?.user_id
+        ) {
           const participantToAdd = {
             ...newUser,
             videoTrack: null,
@@ -202,7 +204,9 @@ export default function GeneralNotificationConnection() {
           };
 
           const existingIndex = currentParticipants.findIndex(
-            (participant: any) => String(participant?.user_id || participant?.id) === String(newUser.user_id)
+            (participant: any) =>
+              String(participant?.user_id || participant?.id) ===
+              String(newUser.user_id),
           );
 
           let updatedParticipants: any[];
@@ -230,16 +234,26 @@ export default function GeneralNotificationConnection() {
               activeBuzzId === String(buzzId) && Boolean(state?.hasJoined);
 
             if (!isAlreadyInThisCall) {
-              handleIncomingDirectCallAnsweredElsewhere(buzzId, { dispatch }).catch(() => {});
+              handleIncomingDirectCallAnsweredElsewhere(buzzId, {
+                dispatch,
+              }).catch(() => {});
             }
           } else if (String(newUser.user_id) !== String(user?.user_id)) {
-            ShowNotify('Info', `${newUser.username || 'A participant'} joined the buzz`);
+            ShowNotify(
+              'Info',
+              `${newUser.username || 'A participant'} joined the buzz`,
+            );
           }
         }
 
-        if ((joinStatus === 'decline' || joinStatus === 'declined') && rejectedUser?.user_id) {
+        if (
+          (joinStatus === 'decline' || joinStatus === 'declined') &&
+          rejectedUser?.user_id
+        ) {
           const updatedParticipants = currentParticipants.filter(
-            (participant: any) => String(participant?.user_id || participant?.id) !== String(rejectedUser.user_id)
+            (participant: any) =>
+              String(participant?.user_id || participant?.id) !==
+              String(rejectedUser.user_id),
           );
 
           dispatch({
@@ -248,13 +262,18 @@ export default function GeneralNotificationConnection() {
           });
 
           if (String(rejectedUser.user_id) !== String(user?.user_id)) {
-            ShowNotify('Buzz Declined', `${rejectedUser.username || 'A participant'} declined the buzz`);
+            ShowNotify(
+              'Buzz Declined',
+              `${rejectedUser.username || 'A participant'} declined the buzz`,
+            );
           }
         }
 
-        if ((joinStatus === 'timeout') && timeoutUser?.user_id) {
+        if (joinStatus === 'timeout' && timeoutUser?.user_id) {
           const updatedParticipants = currentParticipants.filter(
-            (participant: any) => String(participant?.user_id || participant?.id) !== String(timeoutUser.user_id)
+            (participant: any) =>
+              String(participant?.user_id || participant?.id) !==
+              String(timeoutUser.user_id),
           );
 
           dispatch({
@@ -263,57 +282,62 @@ export default function GeneralNotificationConnection() {
           });
 
           if (String(timeoutUser.user_id) !== String(user?.user_id)) {
-            ShowNotify('Buzz Timeout', `${timeoutUser.username || 'A participant'} didn't respond to the buzz`);
+            ShowNotify(
+              'Buzz Timeout',
+              `${
+                timeoutUser.username || 'A participant'
+              } didn't respond to the buzz`,
+            );
           }
         }
-
       }
 
       // BUZZ STARTED
-        if (data?.notification_type === "buzz_started") {
-          const active_buzz = {
-            buzz_id: data?.data?.buzz_id,
-            host_id: data?.data?.host_id,
-            host_name: data?.data?.host_name ?? '',
-            participant_count: data?.data?.participant_ids?.length ?? 0,
-            started_at: data?.data?.created_at,
-          };
-          // Update channelDetails (object)
-          dispatch({
-            type: ACTIONS.CHANNEL_DETAILS,
-            payload: { ...state?.channelDetails, active_buzz } as any,
-          });
-          // Also update userChannels for buzz signal
-          dispatch({
-            type: ACTIONS.BUZZ_SIGNAL_UPDATE,
-            payload: {
-              notification_type: data.notification_type,
-              buzzEventData: data.data,
-            },
-          });
-        }
-
+      if (data?.notification_type === 'buzz_started') {
+        const active_buzz = {
+          buzz_id: data?.data?.buzz_id,
+          host_id: data?.data?.host_id,
+          host_name: data?.data?.host_name ?? '',
+          participant_count: data?.data?.participant_ids?.length ?? 0,
+          started_at: data?.data?.created_at,
+        };
+        // Update channelDetails (object)
+        dispatch({
+          type: ACTIONS.CHANNEL_DETAILS,
+          payload: { ...state?.channelDetails, active_buzz } as any,
+        });
+        // Also update userChannels for buzz signal
+        dispatch({
+          type: ACTIONS.BUZZ_SIGNAL_UPDATE,
+          payload: {
+            notification_type: data.notification_type,
+            buzzEventData: data.data,
+          },
+        });
+      }
 
       // BUZZ ENDED
-        if (data?.notification_type === "buzz_ended") {
-          // Remove active_buzz from channelDetails (object)
-          const { active_buzz, ...rest } = state?.channelDetails ?? {};
-          dispatch({
-            type: ACTIONS.CHANNEL_DETAILS,
-            payload: rest as any,
-          });
-          // Also update userChannels for buzz signal
-          dispatch({
-            type: ACTIONS.BUZZ_SIGNAL_UPDATE,
-            payload: {
-              notification_type: data.notification_type,
-              buzzEventData: data.data,
-            },
-          });
-        }
+      if (data?.notification_type === 'buzz_ended') {
+        // Remove active_buzz from channelDetails (object)
+        const { active_buzz, ...rest } = state?.channelDetails ?? {};
+        dispatch({
+          type: ACTIONS.CHANNEL_DETAILS,
+          payload: rest as any,
+        });
+        // Also update userChannels for buzz signal
+        dispatch({
+          type: ACTIONS.BUZZ_SIGNAL_UPDATE,
+          payload: {
+            notification_type: data.notification_type,
+            buzzEventData: data.data,
+          },
+        });
+      }
     });
 
-    sub.on("error", (ctx: any) => console.error(`Subscription error: ${ctx.message}`));
+    sub.on('error', (ctx: any) =>
+      console.error(`Subscription error: ${ctx.message}`),
+    );
 
     centrifugeClient.connect();
     sub.subscribe();
@@ -326,5 +350,5 @@ export default function GeneralNotificationConnection() {
 
   //
 
-  return null
+  return null;
 }

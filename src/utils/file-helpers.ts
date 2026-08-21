@@ -1,9 +1,21 @@
 import { Folder, Media } from '@/types/thread';
 import { isVoiceMessageMedia } from '@/utils/voice-message';
 
-export type FileCategory = 'all' | 'documents' | 'spreadsheets' | 'images' | 'videos' | 'music';
+export type FileCategory =
+  | 'all'
+  | 'documents'
+  | 'spreadsheets'
+  | 'images'
+  | 'videos'
+  | 'music';
 export type FileMode = 'all' | 'my' | 'shared' | 'deleted';
-export type FileSortOption = 'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'size_desc' | 'size_asc';
+export type FileSortOption =
+  | 'newest'
+  | 'oldest'
+  | 'name_asc'
+  | 'name_desc'
+  | 'size_desc'
+  | 'size_asc';
 export type DateModifiedFilter =
   | 'any'
   | 'today'
@@ -35,7 +47,10 @@ export const SORT_OPTIONS: { key: FileSortOption; label: string }[] = [
   { key: 'size_asc', label: 'Smallest first' },
 ];
 
-export const DATE_MODIFIED_OPTIONS: { key: DateModifiedFilter; label: string }[] = [
+export const DATE_MODIFIED_OPTIONS: {
+  key: DateModifiedFilter;
+  label: string;
+}[] = [
   { key: 'any', label: 'Any time' },
   { key: 'today', label: 'Today' },
   { key: 'last_7_days', label: 'Last 7 days' },
@@ -53,7 +68,10 @@ export const decodeFileName = (name: string): string => {
   }
 };
 
-export const getFileExtension = (fileName: string, fileType?: string): string => {
+export const getFileExtension = (
+  fileName: string,
+  fileType?: string,
+): string => {
   const fromName = fileName?.split('.').pop()?.toLowerCase() || '';
   if (fromName) return fromName;
   return (fileType || '').toLowerCase();
@@ -113,13 +131,37 @@ export const getFileTheme = (fileName: string) => {
     };
   }
   if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(ext)) {
-    return { color: '#6C47FF', label: 'IMG', icon: 'image' as const, previewBackground: '#EDE7F6', previewAccent: '#D1C4E9', kind: 'image' as const, kindLabel: 'Image' };
+    return {
+      color: '#6C47FF',
+      label: 'IMG',
+      icon: 'image' as const,
+      previewBackground: '#EDE7F6',
+      previewAccent: '#D1C4E9',
+      kind: 'image' as const,
+      kindLabel: 'Image',
+    };
   }
   if (['mp4', 'mov', 'm4v', 'avi', 'mkv', 'webm'].includes(ext)) {
-    return { color: '#1E88E5', label: 'VID', icon: 'videocam' as const, previewBackground: '#E3F2FD', previewAccent: '#BBDEFB', kind: 'video' as const, kindLabel: 'Video' };
+    return {
+      color: '#1E88E5',
+      label: 'VID',
+      icon: 'videocam' as const,
+      previewBackground: '#E3F2FD',
+      previewAccent: '#BBDEFB',
+      kind: 'video' as const,
+      kindLabel: 'Video',
+    };
   }
   if (['mp3', 'wav', 'm4a', 'ogg', 'aac'].includes(ext)) {
-    return { color: '#8E24AA', label: 'AUD', icon: 'musical-notes' as const, previewBackground: '#F3E5F5', previewAccent: '#E1BEE7', kind: 'audio' as const, kindLabel: 'Audio' };
+    return {
+      color: '#8E24AA',
+      label: 'AUD',
+      icon: 'musical-notes' as const,
+      previewBackground: '#F3E5F5',
+      previewAccent: '#E1BEE7',
+      kind: 'audio' as const,
+      kindLabel: 'Audio',
+    };
   }
   return {
     color: '#607D8B',
@@ -132,14 +174,22 @@ export const getFileTheme = (fileName: string) => {
   };
 };
 
-export const isSpreadsheetFile = (file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>): boolean => {
+export const isSpreadsheetFile = (
+  file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>,
+): boolean => {
   const ext = getFileExtension(file.file_name, file.file_type);
   const mime = (file.mime_type || '').toLowerCase();
   if (['xls', 'xlsx', 'csv'].includes(ext)) return true;
-  return mime.includes('spreadsheet') || mime.includes('excel') || mime === 'text/csv';
+  return (
+    mime.includes('spreadsheet') ||
+    mime.includes('excel') ||
+    mime === 'text/csv'
+  );
 };
 
-export const isPresentationFile = (file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>): boolean => {
+export const isPresentationFile = (
+  file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>,
+): boolean => {
   const ext = getFileExtension(file.file_name, file.file_type);
   const mime = (file.mime_type || '').toLowerCase();
   if (['ppt', 'pptx'].includes(ext)) return true;
@@ -148,18 +198,24 @@ export const isPresentationFile = (file: Pick<Media, 'file_name' | 'file_type' |
 
 export const isOfficeAttachmentFile = (
   file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>,
-): boolean => isDocumentFile(file) || isSpreadsheetFile(file) || isPresentationFile(file);
+): boolean =>
+  isDocumentFile(file) || isSpreadsheetFile(file) || isPresentationFile(file);
 
-export const isAudioFile = (file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>): boolean => {
+export const isAudioFile = (
+  file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>,
+): boolean => {
   if (isVoiceMessageMedia(file)) return true;
   const ext = getFileExtension(file.file_name, file.file_type);
   const mime = (file.mime_type || '').toLowerCase();
   const audioExtensions = ['wav', 'mp3', 'm4a', 'ogg', 'aac'];
-  if (audioExtensions.includes(ext) && !['mp4', 'mov'].includes(ext)) return true;
+  if (audioExtensions.includes(ext) && !['mp4', 'mov'].includes(ext))
+    return true;
   return mime.startsWith('audio/');
 };
 
-export const isVideoFile = (file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>): boolean => {
+export const isVideoFile = (
+  file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>,
+): boolean => {
   if (isVoiceMessageMedia(file)) return false;
   const ext = getFileExtension(file.file_name, file.file_type);
   const mime = (file.mime_type || '').toLowerCase();
@@ -170,13 +226,20 @@ export const isVideoFile = (file: Pick<Media, 'file_name' | 'file_type' | 'mime_
   return false;
 };
 
-export const isImageFile = (file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>): boolean => {
+export const isImageFile = (
+  file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>,
+): boolean => {
   const ext = getFileExtension(file.file_name, file.file_type);
   const mime = (file.mime_type || '').toLowerCase();
-  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(ext) || mime.startsWith('image/');
+  return (
+    ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(ext) ||
+    mime.startsWith('image/')
+  );
 };
 
-export const isDocumentFile = (file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>): boolean => {
+export const isDocumentFile = (
+  file: Pick<Media, 'file_name' | 'file_type' | 'mime_type'>,
+): boolean => {
   const ext = getFileExtension(file.file_name, file.file_type);
   return ['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(ext);
 };
@@ -192,12 +255,18 @@ export const getFileCategory = (file: Media): FileCategory | null => {
   return null;
 };
 
-export const matchesCategory = (file: Media, category: FileCategory): boolean => {
+export const matchesCategory = (
+  file: Media,
+  category: FileCategory,
+): boolean => {
   if (category === 'all') return true;
   return getFileCategory(file) === category;
 };
 
-export const matchesDateFilter = (file: Media, filter: DateModifiedFilter): boolean => {
+export const matchesDateFilter = (
+  file: Media,
+  filter: DateModifiedFilter,
+): boolean => {
   if (filter === 'any') return true;
   const updated = new Date(file.updated_at || file.created_at).getTime();
   const now = Date.now();
@@ -213,12 +282,17 @@ export const matchesDateFilter = (file: Media, filter: DateModifiedFilter): bool
   if (filter === 'last_30_days') return now - updated <= 30 * day;
   if (filter === 'this_year') return updated >= startOfYear.getTime();
   if (filter === 'last_year') {
-    return updated >= startOfLastYear.getTime() && updated < endOfLastYear.getTime();
+    return (
+      updated >= startOfLastYear.getTime() && updated < endOfLastYear.getTime()
+    );
   }
   return true;
 };
 
-export const matchesFolderDateFilter = (folder: Folder, filter: DateModifiedFilter): boolean => {
+export const matchesFolderDateFilter = (
+  folder: Folder,
+  filter: DateModifiedFilter,
+): boolean => {
   if (filter === 'any') return true;
   const updated = new Date(folder.updated_at || folder.created_at).getTime();
   const now = Date.now();
@@ -234,7 +308,9 @@ export const matchesFolderDateFilter = (folder: Folder, filter: DateModifiedFilt
   if (filter === 'last_30_days') return now - updated <= 30 * day;
   if (filter === 'this_year') return updated >= startOfYear.getTime();
   if (filter === 'last_year') {
-    return updated >= startOfLastYear.getTime() && updated < endOfLastYear.getTime();
+    return (
+      updated >= startOfLastYear.getTime() && updated < endOfLastYear.getTime()
+    );
   }
   return true;
 };
@@ -244,14 +320,19 @@ export const formatItemCount = (count: number): string => {
   return count === 1 ? '1 item' : `${count} items`;
 };
 
-export const sortFolders = (folders: Folder[], sort: FileSortOption): Folder[] => {
+export const sortFolders = (
+  folders: Folder[],
+  sort: FileSortOption,
+): Folder[] => {
   const sorted = [...folders];
   sorted.sort((a, b) => {
     const nameA = a.name.toLowerCase();
     const nameB = b.name.toLowerCase();
     switch (sort) {
       case 'oldest':
-        return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        return (
+          new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
+        );
       case 'name_asc':
         return nameA.localeCompare(nameB);
       case 'name_desc':
@@ -262,7 +343,9 @@ export const sortFolders = (folders: Folder[], sort: FileSortOption): Folder[] =
         return a.item_count - b.item_count;
       case 'newest':
       default:
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        return (
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
     }
   });
   return sorted;
@@ -275,7 +358,9 @@ export const sortFiles = (files: Media[], sort: FileSortOption): Media[] => {
     const nameB = decodeFileName(b.file_name).toLowerCase();
     switch (sort) {
       case 'oldest':
-        return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        return (
+          new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
+        );
       case 'name_asc':
         return nameA.localeCompare(nameB);
       case 'name_desc':
@@ -286,7 +371,9 @@ export const sortFiles = (files: Media[], sort: FileSortOption): Media[] => {
         return a.size - b.size;
       case 'newest':
       default:
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        return (
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
     }
   });
   return sorted;

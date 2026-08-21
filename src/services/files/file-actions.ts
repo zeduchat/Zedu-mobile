@@ -1,5 +1,5 @@
 import { Media } from '@/types/thread';
-import { DeleteRequest, PostRequest, PutRequest } from '@/utils/requests';
+import { DeleteRequest, PutRequest } from '@/utils/requests';
 
 export const moveFile = (fileId: string, folderId: string) =>
   PutRequest<{ data?: Media; message?: string }>(`/files/${fileId}/move`, {

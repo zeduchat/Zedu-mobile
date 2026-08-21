@@ -26,7 +26,9 @@ const FileManagementHeader: React.FC<FileManagementHeaderProps> = ({
     </AppText>
     {selectionMode ? (
       <TouchableOpacity onPress={onCancelSelection} style={styles.iconBtn}>
-        <AppText size={14} style={styles.cancelSelectText}>Cancel</AppText>
+        <AppText size={14} style={styles.cancelSelectText}>
+          Cancel
+        </AppText>
       </TouchableOpacity>
     ) : (
       <View style={styles.iconBtn} />

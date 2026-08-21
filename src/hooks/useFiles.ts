@@ -5,7 +5,6 @@ import { GetRequest } from '@/utils/requests';
 import {
   FilesListQueryFilters,
   buildFilesListQuery,
-  fileModeToApiMode,
   mapFilesFiltersToRequest,
 } from '@/types/files-api';
 
@@ -24,7 +23,13 @@ type UseFilesOptions = {
   filters?: FilesListQueryFilters;
 };
 
-const useFiles = ({ mode, folderId = null, limit = 200, enabled = true, filters }: UseFilesOptions) => {
+const useFiles = ({
+  mode,
+  folderId = null,
+  limit = 200,
+  enabled = true,
+  filters,
+}: UseFilesOptions) => {
   const [files, setFiles] = useState<Media[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,39 +42,52 @@ const useFiles = ({ mode, folderId = null, limit = 200, enabled = true, filters 
     filtersRef.current = filters;
   }, [filters]);
 
-  const fetchFiles = useCallback(async (pageNum: number, isRefresh = false) => {
-    if (!enabled) return;
+  const fetchFiles = useCallback(
+    async (pageNum: number, isRefresh = false) => {
+      if (!enabled) return;
 
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
-
-    const query = buildFilesListQuery(
-      mapFilesFiltersToRequest(mode, pageNum, limit, folderId, filtersRef.current),
-    );
-
-    const { data, error: requestError } = await GetRequest<{
-      data: { files: Media[]; pagination: FilesPagination };
-    }>(`/files?${query}`);
-
-    if (requestError) {
-      setError(typeof requestError === 'string' ? requestError : 'Failed to load files');
-      if (isRefresh || pageNum === 1) {
-        setFiles([]);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
       }
-    } else {
-      const nextFiles = data?.data?.files || [];
-      setPagination(data?.data?.pagination || null);
-      setFiles((prev) => (pageNum === 1 ? nextFiles : [...prev, ...nextFiles]));
-      setPage(pageNum);
-    }
+      setError(null);
 
-    setLoading(false);
-    setRefreshing(false);
-  }, [enabled, folderId, limit, mode]);
+      const query = buildFilesListQuery(
+        mapFilesFiltersToRequest(
+          mode,
+          pageNum,
+          limit,
+          folderId,
+          filtersRef.current,
+        ),
+      );
+
+      const { data, error: requestError } = await GetRequest<{
+        data: { files: Media[]; pagination: FilesPagination };
+      }>(`/files?${query}`);
+
+      if (requestError) {
+        setError(
+          typeof requestError === 'string'
+            ? requestError
+            : 'Failed to load files',
+        );
+        if (isRefresh || pageNum === 1) {
+          setFiles([]);
+        }
+      } else {
+        const nextFiles = data?.data?.files || [];
+        setPagination(data?.data?.pagination || null);
+        setFiles(prev => (pageNum === 1 ? nextFiles : [...prev, ...nextFiles]));
+        setPage(pageNum);
+      }
+
+      setLoading(false);
+      setRefreshing(false);
+    },
+    [enabled, folderId, limit, mode],
+  );
 
   useEffect(() => {
     setPage(1);
@@ -80,7 +98,8 @@ const useFiles = ({ mode, folderId = null, limit = 200, enabled = true, filters 
 
   const loadMore = useCallback(() => {
     if (loading || refreshing || !pagination) return;
-    const totalPages = pagination.total_pages_count || pagination.page_count || 1;
+    const totalPages =
+      pagination.total_pages_count || pagination.page_count || 1;
     if (page >= totalPages) return;
     fetchFiles(page + 1);
   }, [fetchFiles, loading, page, pagination, refreshing]);
@@ -102,7 +121,9 @@ const useFiles = ({ mode, folderId = null, limit = 200, enabled = true, filters 
 };
 
 export const fetchFileById = async (fileId: string) => {
-  const { data, error } = await GetRequest<{ data: Media }>(`/files/file/${fileId}`);
+  const { data, error } = await GetRequest<{ data: Media }>(
+    `/files/file/${fileId}`,
+  );
   if (error) {
     return { file: null, error };
   }

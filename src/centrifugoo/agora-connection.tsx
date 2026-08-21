@@ -8,298 +8,313 @@ import { Dimensions } from 'react-native';
 import { ShowNotify } from '@/components/ui/toast';
 
 interface Props {
-    id: string;
+  id: string;
 }
 
 const AgoraConnection = ({ id }: Props) => {
-    // Normalize channel id to uppercase for consistency
-    const normalizedId = id.toUpperCase();
-    const { state, dispatch } = useDataContext();
-    const { user, buzzParticipants, buzzChats } = state || {};
+  // Normalize channel id to uppercase for consistency
+  const normalizedId = id.toUpperCase();
+  const { state, dispatch } = useDataContext();
+  const { user, buzzParticipants, buzzChats } = state || {};
 
-    const participantsRef = useRef<any[]>(buzzParticipants || []);
-    const chatsRef = useRef<any[]>(buzzChats || []);
+  const participantsRef = useRef<any[]>(buzzParticipants || []);
+  const chatsRef = useRef<any[]>(buzzChats || []);
 
-    useEffect(() => {
-        participantsRef.current = buzzParticipants;
-    }, [buzzParticipants]);
+  useEffect(() => {
+    participantsRef.current = buzzParticipants;
+  }, [buzzParticipants]);
 
-    useEffect(() => {
-        chatsRef.current = buzzChats;
-    }, [buzzChats]);
+  useEffect(() => {
+    chatsRef.current = buzzChats;
+  }, [buzzChats]);
 
-    const getConnectionToken = async () => {
-        try {
-            const response = await axios.get(`${BASE_URL}/token/connection`, {
-                headers: {
-                    Authorization: `Bearer ${state?.token}`,
-                    "Content-Type": "application/json",
-                },
+  const getConnectionToken = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/token/connection`, {
+        headers: {
+          Authorization: `Bearer ${state?.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data?.data?.token;
+    } catch (error) {
+      console.error('Centrifugo Conn Token Error:', error);
+    }
+  };
+
+  const getSubscriptionToken = async (channel: string) => {
+    try {
+      // Always use uppercase channel for token
+      const response = await axios.post(
+        `${BASE_URL}/token/subscription`,
+        { channel: channel.toUpperCase() },
+        {
+          headers: {
+            Authorization: `Bearer ${state?.token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      return response.data?.data?.token;
+    } catch (error) {
+      console.error('Centrifugo Sub Token Error:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!normalizedId || !state?.token) return;
+
+    const centrifugeClient: any = new Centrifuge(CONNECT_URL, {
+      getToken: getConnectionToken,
+      debug: true,
+    });
+
+    const getPersonalChannelSubscriptionToken = async () => {
+      return getSubscriptionToken(normalizedId);
+    };
+
+    const sub = centrifugeClient.newSubscription(normalizedId, {
+      getToken: getPersonalChannelSubscriptionToken,
+    });
+
+    // const sub = centrifugeClient.newSubscription(id, {
+    //     getToken: () => getSubscriptionToken(id),
+    // });
+
+    sub.on('subscribed', (_ctx: any) => {
+      // major agora calls is here just lets move and move there
+    });
+
+    sub.on('publication', async (ctx: any) => {
+      const payload = ctx?.data;
+
+      // Always use the ref to get the absolute latest list
+      const currentParticipants = participantsRef.current || [];
+      const currentChats = chatsRef.current || [];
+
+      if (payload?.notification_type === 'user_joined_buzz') {
+        const buzzEventData = payload?.data || payload;
+        const newUser =
+          buzzEventData?.user_joined || buzzEventData?.data?.user_joined;
+
+        if (newUser && newUser.user_id) {
+          const alreadyExists = currentParticipants.some(
+            (p: any) => String(p.user_id) === String(newUser.user_id),
+          );
+
+          if (!alreadyExists) {
+            const participantToAdd = {
+              ...newUser,
+              videoTrack: null,
+              audioTrack: null,
+              handsRaised: false,
+              isPinned: false,
+              status: 'active',
+            };
+
+            dispatch({
+              type: ACTIONS.BUZZ_PARTICIPANTS,
+              payload: [...currentParticipants, participantToAdd],
             });
-            return response.data?.data?.token;
-        } catch (error) {
-            console.error("Centrifugo Conn Token Error:", error);
-        }
-    };
 
-    const getSubscriptionToken = async (channel: string) => {
-        try {
-            // Always use uppercase channel for token
-            const response = await axios.post(
-                `${BASE_URL}/token/subscription`,
-                { channel: channel.toUpperCase() },
-                {
-                    headers: {
-                        Authorization: `Bearer ${state?.token}`,
-                        "Content-Type": "application/json",
-                    },
-                }
+            if (String(newUser.user_id) !== String(user?.user_id)) {
+              ShowNotify(
+                'Info',
+                `${newUser.username || 'A participant'} joined the buzz`,
+              );
+            }
+          }
+        }
+      }
+
+      if (payload?.event === 'user_left_buzz') {
+        const buzzEventData = payload?.data || payload;
+        const userWhoLeft =
+          buzzEventData?.user_left || buzzEventData?.data?.user_left;
+
+        if (userWhoLeft && userWhoLeft.user_id) {
+          const updatedParticipants = currentParticipants.filter(
+            (p: any) => String(p.user_id) !== String(userWhoLeft.user_id),
+          );
+
+          dispatch({
+            type: ACTIONS.BUZZ_PARTICIPANTS,
+            payload: updatedParticipants,
+          });
+
+          if (String(userWhoLeft.user_id) !== String(user?.user_id)) {
+            ShowNotify(
+              'Info',
+              `${userWhoLeft.username || 'A participant'} left the buzz`,
             );
-            return response.data?.data?.token;
-        } catch (error) {
-            console.error("Centrifugo Sub Token Error:", error);
+          }
         }
+      }
+
+      if (payload?.notification_type === 'buzz_reaction_event') {
+        const reactionData = payload.data;
+
+        if (reactionData?.user_id === user?.user_id) return;
+
+        if (reactionData?.reaction_type === 'emoji') {
+          const id = Date.now() + Math.random();
+
+          const { width, height } = Dimensions.get('window');
+          const newFloatingEmoji = {
+            id,
+            emoji: reactionData.content,
+            x: width / 2 + (Math.random() - 0.5) * 100,
+            y: height - 100,
+            name: reactionData.username,
+            jitter: (Math.random() - 0.5) * 80,
+          };
+
+          dispatch({
+            type: ACTIONS.ADD_FLOATING_EMOJI,
+            payload: newFloatingEmoji,
+          });
+
+          setTimeout(() => {
+            dispatch({ type: ACTIONS.REMOVE_FLOATING_EMOJI, payload: id });
+          }, 1800);
+
+          // const newFloatingEmoji = {
+          //   id,
+          //   emoji: reactionData.content,
+          //   x: window.innerWidth / 2,
+          //   y: window.innerHeight - 100,
+          //   name: reactionData.username,
+          // };
+
+          // dispatch({
+          //   type: ACTIONS.FLOATING_EMOJIS,
+          //   payload: [...(state.floatingEmojis || []), newFloatingEmoji],
+          // });
+
+          // setTimeout(() => {
+          //   dispatch({
+          //     type: ACTIONS.FLOATING_EMOJIS,
+          //     payload: (state.floatingEmojis || []).filter((e: any) => e.id !== id),
+          //   });
+          // }, 3000);
+        }
+      }
+
+      if (payload?.notification_type === 'buzz_sticker_event') {
+        const stickerData = payload.data;
+
+        // Always pull the freshest list from the ref immediately before updating
+        const latestParticipants = participantsRef.current || [];
+
+        if (stickerData?.sticker === 'raise_hand') {
+          const updated = latestParticipants.map((p: any) =>
+            String(p.user_id) === String(stickerData.user_id)
+              ? { ...p, handsRaised: true }
+              : p,
+          );
+          dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+        }
+
+        if (stickerData?.sticker === 'away') {
+          const updated = latestParticipants.map((p: any) =>
+            String(p.user_id) === String(stickerData.user_id)
+              ? { ...p, handsRaised: false }
+              : p,
+          );
+
+          dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+        }
+      }
+
+      // Handle audio/video status changes
+      if (payload?.notification_type === 'user_audio_status_changed') {
+        const statusData = payload.data;
+        const latestParticipants = participantsRef.current || [];
+
+        if (statusData?.user_id) {
+          const updated = latestParticipants.map((p: any) =>
+            String(p.user_id) === String(statusData.user_id)
+              ? { ...p, audioTrack: statusData.audio_enabled }
+              : p,
+          );
+          dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+        }
+      }
+
+      if (payload?.notification_type === 'user_video_status_changed') {
+        const statusData = payload.data;
+        const latestParticipants = participantsRef.current || [];
+
+        if (statusData?.user_id) {
+          const updated = latestParticipants.map((p: any) =>
+            String(p.user_id) === String(statusData.user_id)
+              ? { ...p, videoTrack: statusData.video_enabled }
+              : p,
+          );
+          dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+        }
+      }
+
+      if (payload?.type === 'buzz_message') {
+        const newMessage = payload?.data || payload;
+        const incomingMessageId = String(
+          newMessage?.message_id ?? newMessage?.id ?? '',
+        );
+
+        if (incomingMessageId) {
+          const exists = currentChats.some(
+            (message: any) =>
+              String(message?.message_id ?? message?.id ?? '') ===
+              incomingMessageId,
+          );
+
+          if (exists) {
+            return;
+          }
+        }
+
+        dispatch({
+          type: ACTIONS.BUZZ_CHATS,
+          payload: [...currentChats, newMessage],
+        });
+      }
+
+      if (payload?.event === 'recording_started') {
+        dispatch({
+          type: ACTIONS.BUZZ_DATA,
+          payload: {
+            ...state.buzzData,
+            is_recording: true,
+          },
+        });
+      }
+
+      if (payload?.event === 'recording_stopped') {
+        dispatch({
+          type: ACTIONS.BUZZ_DATA,
+          payload: {
+            ...state.buzzData,
+            is_recording: false,
+          },
+        });
+      }
+    });
+
+    sub.on('error', (ctx: any) =>
+      console.error(`[CENTRIFUGO] Subscription error:`, ctx.message),
+    );
+
+    // Connect and subscribe immediately (matching web pattern)
+    centrifugeClient.connect();
+    sub.subscribe();
+
+    return () => {
+      sub.unsubscribe();
+      centrifugeClient.disconnect();
     };
+  }, [id, state?.token]);
 
-    useEffect(() => {
-        if (!normalizedId || !state?.token) return;
-
-        const centrifugeClient: any = new Centrifuge(CONNECT_URL, {
-            getToken: getConnectionToken,
-            debug: true,
-        });
-
-        const getPersonalChannelSubscriptionToken = async () => {
-            return getSubscriptionToken(normalizedId);
-        };
-
-        const sub = centrifugeClient.newSubscription(normalizedId, {
-            getToken: getPersonalChannelSubscriptionToken,
-        });
-
-        // const sub = centrifugeClient.newSubscription(id, {
-        //     getToken: () => getSubscriptionToken(id),
-        // });
-
-        sub.on('subscribed', (ctx: any) => {
-            // major agora calls is here just lets move and move there
-        });
-
-        sub.on("publication", async (ctx: any) => {
-            const payload = ctx?.data;
-
-            // Always use the ref to get the absolute latest list
-            const currentParticipants = participantsRef.current || [];
-            const currentChats = chatsRef.current || [];
-
-            if (payload?.notification_type === "user_joined_buzz") {
-                const buzzEventData = payload?.data || payload;
-                const newUser = buzzEventData?.user_joined || buzzEventData?.data?.user_joined;
-
-                if (newUser && newUser.user_id) {
-                    const alreadyExists = currentParticipants.some(
-                        (p: any) => String(p.user_id) === String(newUser.user_id)
-                    );
-
-                    if (!alreadyExists) { 
-                        const participantToAdd = {
-                            ...newUser,
-                            videoTrack: null,
-                            audioTrack: null,
-                            handsRaised: false,
-                            isPinned: false,
-                            status: "active"
-                        };
-
-                        dispatch({
-                            type: ACTIONS.BUZZ_PARTICIPANTS,
-                            payload: [...currentParticipants, participantToAdd],
-                        });
-
-                        if (String(newUser.user_id) !== String(user?.user_id)) {
-                            ShowNotify('Info', `${newUser.username || 'A participant'} joined the buzz`);
-                        }
-
-                    }
-                }
-            }
-
-            if (payload?.event === "user_left_buzz") {
-                const buzzEventData = payload?.data || payload;
-                const userWhoLeft = buzzEventData?.user_left || buzzEventData?.data?.user_left;
-
-                if (userWhoLeft && userWhoLeft.user_id) {
-                    const updatedParticipants = currentParticipants.filter(
-                        (p: any) => String(p.user_id) !== String(userWhoLeft.user_id)
-                    );
-
-                    dispatch({
-                        type: ACTIONS.BUZZ_PARTICIPANTS,
-                        payload: updatedParticipants,
-                    });
-
-                    if (String(userWhoLeft.user_id) !== String(user?.user_id)) {
-                        ShowNotify('Info', `${userWhoLeft.username || 'A participant'} left the buzz`);
-                    }
-                }
-            }
-
-            if (payload?.notification_type === "buzz_reaction_event") {
-                const reactionData = payload.data;
-
-                if (reactionData?.user_id === user?.user_id) return;
-
-                if (reactionData?.reaction_type === "emoji") {
-                    const id = Date.now() + Math.random();
-
-                    const { width, height } = Dimensions.get('window');
-                    const newFloatingEmoji = {
-                        id,
-                        emoji: reactionData.content,
-                        x: width / 2 + (Math.random() - 0.5) * 100,
-                        y: height - 100,
-                        name: reactionData.username,
-                        jitter: (Math.random() - 0.5) * 80,
-                    };
-
-                    dispatch({ type: ACTIONS.ADD_FLOATING_EMOJI, payload: newFloatingEmoji });
-
-                    setTimeout(() => {
-                        dispatch({ type: ACTIONS.REMOVE_FLOATING_EMOJI, payload: id });
-                    }, 1800);
-
-                    // const newFloatingEmoji = {
-                    //   id,
-                    //   emoji: reactionData.content,
-                    //   x: window.innerWidth / 2,
-                    //   y: window.innerHeight - 100,
-                    //   name: reactionData.username,
-                    // };
-
-                    // dispatch({
-                    //   type: ACTIONS.FLOATING_EMOJIS,
-                    //   payload: [...(state.floatingEmojis || []), newFloatingEmoji],
-                    // });
-
-                    // setTimeout(() => {
-                    //   dispatch({
-                    //     type: ACTIONS.FLOATING_EMOJIS,
-                    //     payload: (state.floatingEmojis || []).filter((e: any) => e.id !== id),
-                    //   });
-                    // }, 3000);
-                }
-            }
-
-            if (payload?.notification_type === "buzz_sticker_event") {
-                const stickerData = payload.data;
-
-                // Always pull the freshest list from the ref immediately before updating
-                const latestParticipants = participantsRef.current || [];
-
-                if (stickerData?.sticker === "raise_hand") {
-                    const updated = latestParticipants.map((p: any) =>
-                        String(p.user_id) === String(stickerData.user_id)
-                            ? { ...p, handsRaised: true }
-                            : p
-                    );
-                    dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-                }
-
-                if (stickerData?.sticker === "away") {
-                    const updated = latestParticipants.map((p: any) =>
-                        String(p.user_id) === String(stickerData.user_id)
-                            ? { ...p, handsRaised: false }
-                            : p
-                    );
-
-                    dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-                }
-            }
-
-            // Handle audio/video status changes
-            if (payload?.notification_type === "user_audio_status_changed") {
-                const statusData = payload.data;
-                const latestParticipants = participantsRef.current || [];
-
-                if (statusData?.user_id) {
-                    const updated = latestParticipants.map((p: any) =>
-                        String(p.user_id) === String(statusData.user_id)
-                            ? { ...p, audioTrack: statusData.audio_enabled }
-                            : p
-                    );
-                    dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-                }
-            }
-
-            if (payload?.notification_type === "user_video_status_changed") {
-                const statusData = payload.data;
-                const latestParticipants = participantsRef.current || [];
-
-                if (statusData?.user_id) {
-                    const updated = latestParticipants.map((p: any) =>
-                        String(p.user_id) === String(statusData.user_id)
-                            ? { ...p, videoTrack: statusData.video_enabled }
-                            : p
-                    );
-                    dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-                }
-            }
-
-            if (payload?.type === "buzz_message") {
-                const newMessage = payload?.data || payload;
-                const incomingMessageId = String(newMessage?.message_id ?? newMessage?.id ?? '');
-
-                if (incomingMessageId) {
-                    const exists = currentChats.some((message: any) =>
-                        String(message?.message_id ?? message?.id ?? '') === incomingMessageId
-                    );
-
-                    if (exists) {
-                        return;
-                    }
-                }
-
-                dispatch({
-                    type: ACTIONS.BUZZ_CHATS,
-                    payload: [...currentChats, newMessage],
-                });
-
-            }
-
-            if(payload?.event === "recording_started"){
-                dispatch({
-                    type:ACTIONS.BUZZ_DATA,
-                    payload:{
-                        ...state.buzzData,
-                        is_recording:true
-                    }
-                })
-            }
-
-            if(payload?.event === "recording_stopped"){
-                dispatch({
-                    type:ACTIONS.BUZZ_DATA,
-                    payload:{
-                        ...state.buzzData,
-                        is_recording:false
-                    }
-                })
-            }
-        });
-
-        sub.on("error", (ctx: any) => console.error(`[CENTRIFUGO] Subscription error:`, ctx.message));
-
-        // Connect and subscribe immediately (matching web pattern)
-        centrifugeClient.connect();
-        sub.subscribe();
-
-        return () => {
-            sub.unsubscribe();
-            centrifugeClient.disconnect();
-        };
-    }, [id, state?.token]);
-
-    return null;
+  return null;
 };
 
 export default AgoraConnection;

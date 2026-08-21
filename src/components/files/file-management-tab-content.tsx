@@ -23,7 +23,9 @@ type FileManagementTabContentProps = {
   vm: UseFileManagementReturn;
 };
 
-const FileManagementTabContent: React.FC<FileManagementTabContentProps> = ({ vm }) => {
+const FileManagementTabContent: React.FC<FileManagementTabContentProps> = ({
+  vm,
+}) => {
   const {
     isFolderView,
     isFoldersTab,
@@ -94,7 +96,9 @@ const FileManagementTabContent: React.FC<FileManagementTabContentProps> = ({ vm 
           </AppText>
           <AppText style={styles.emptySubtitle}>{activeError}</AppText>
           <TouchableOpacity style={styles.retryBtn} onPress={activeRefresh}>
-            <AppText variant="bold" style={styles.retryText}>Retry</AppText>
+            <AppText variant="bold" style={styles.retryText}>
+              Retry
+            </AppText>
           </TouchableOpacity>
         </View>
       </View>
@@ -102,14 +106,22 @@ const FileManagementTabContent: React.FC<FileManagementTabContentProps> = ({ vm 
   }
 
   const refreshControl = (
-    <RefreshControl refreshing={activeRefreshing} onRefresh={activeRefresh} tintColor={Colors.primary} />
+    <RefreshControl
+      refreshing={activeRefreshing}
+      onRefresh={activeRefresh}
+      tintColor={Colors.primary}
+    />
   );
 
   const renderFileItem = ({ item }: { item: Media }) => (
     <FileGridItem
       file={item}
       isSelected={selectedFileIds.has(item.id)}
-      isHighlighted={selectionMode ? selectedFileIds.has(item.id) : selectedFileId === item.id}
+      isHighlighted={
+        selectionMode
+          ? selectedFileIds.has(item.id)
+          : selectedFileId === item.id
+      }
       selectionMode={selectionMode}
       onPress={() => handleFilePress(item)}
       onLongPress={() => openFileActions(item)}
@@ -130,30 +142,34 @@ const FileManagementTabContent: React.FC<FileManagementTabContentProps> = ({ vm 
       <FlatList
         data={filteredFiles}
         numColumns={2}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         showsVerticalScrollIndicator={false}
         renderItem={renderFileItem}
-        ListHeaderComponent={(
+        ListHeaderComponent={
           <FileManagementFolderHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />
-        )}
-        contentContainerStyle={filteredFiles.length ? styles.gridContent : styles.listEmptyContent}
+        }
+        contentContainerStyle={
+          filteredFiles.length ? styles.gridContent : styles.listEmptyContent
+        }
         columnWrapperStyle={filteredFiles.length ? styles.gridRow : undefined}
         refreshControl={refreshControl}
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}
-        ListEmptyComponent={(
+        ListEmptyComponent={
           <FileManagementEmptyState
             title="No files in this folder"
             subtitle="This folder is empty."
             inline
           />
-        )}
-        ListFooterComponent={(
-          <FileManagementListFooter visible={filteredFiles.length > 0 && activeHasMore} />
-        )}
+        }
+        ListFooterComponent={
+          <FileManagementListFooter
+            visible={filteredFiles.length > 0 && activeHasMore}
+          />
+        }
       />
     );
   }
@@ -163,25 +179,31 @@ const FileManagementTabContent: React.FC<FileManagementTabContentProps> = ({ vm 
       <FlatList
         data={filteredFolders}
         numColumns={2}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={renderFolderItem}
         ListHeaderComponent={topChrome}
-        contentContainerStyle={filteredFolders.length ? styles.gridContent : styles.listEmptyContent}
+        contentContainerStyle={
+          filteredFolders.length ? styles.gridContent : styles.listEmptyContent
+        }
         columnWrapperStyle={filteredFolders.length ? styles.gridRow : undefined}
         refreshControl={refreshControl}
         onEndReached={activeLoadMore}
         onEndReachedThreshold={0.4}
-        ListEmptyComponent={(
+        ListEmptyComponent={
           <FileManagementEmptyState
             title="No folders found"
             subtitle="Try adjusting your filters."
-            icon={<Ionicons name="folder-open-outline" size={48} color="#C4C4C6" />}
+            icon={
+              <Ionicons name="folder-open-outline" size={48} color="#C4C4C6" />
+            }
             inline
           />
-        )}
-        ListFooterComponent={(
-          <FileManagementListFooter visible={filteredFolders.length > 0 && activeHasMore} />
-        )}
+        }
+        ListFooterComponent={
+          <FileManagementListFooter
+            visible={filteredFolders.length > 0 && activeHasMore}
+          />
+        }
       />
     );
   }
@@ -190,25 +212,29 @@ const FileManagementTabContent: React.FC<FileManagementTabContentProps> = ({ vm 
     <FlatList
       data={filteredFiles}
       numColumns={2}
-      keyExtractor={(item) => item.id}
+      keyExtractor={item => item.id}
       renderItem={renderFileItem}
       ListHeaderComponent={topChrome}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={filteredFiles.length ? styles.gridContent : styles.listEmptyContent}
+      contentContainerStyle={
+        filteredFiles.length ? styles.gridContent : styles.listEmptyContent
+      }
       columnWrapperStyle={filteredFiles.length ? styles.gridRow : undefined}
       refreshControl={refreshControl}
       onEndReached={activeLoadMore}
       onEndReachedThreshold={0.4}
-      ListEmptyComponent={(
+      ListEmptyComponent={
         <FileManagementEmptyState
           title="No files found"
           subtitle="Try adjusting your filters."
           inline
         />
-      )}
-      ListFooterComponent={(
-        <FileManagementListFooter visible={filteredFiles.length > 0 && activeHasMore} />
-      )}
+      }
+      ListFooterComponent={
+        <FileManagementListFooter
+          visible={filteredFiles.length > 0 && activeHasMore}
+        />
+      }
     />
   );
 };

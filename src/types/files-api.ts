@@ -1,4 +1,8 @@
-import { DateModifiedFilter, FileCategory, FileMode } from '@/utils/file-helpers';
+import {
+  DateModifiedFilter,
+  FileCategory,
+  FileMode,
+} from '@/utils/file-helpers';
 
 /** Query `mode` values expected by GET /files and GET /files/folders */
 export type FilesApiMode = 'all' | 'mine' | 'shared' | 'trash';
@@ -35,14 +39,14 @@ export type FilesListRequestParams = {
   search?: string;
 };
 
-export const buildFilesListQuery = (
-  params: FilesListRequestParams,
-): string => {
+export const buildFilesListQuery = (params: FilesListRequestParams): string => {
   const parts: string[] = [];
 
   const append = (key: string, value: string | number | undefined) => {
     if (value === undefined || value === null || value === '') return;
-    parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+    parts.push(
+      `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+    );
   };
 
   append('mode', params.mode);

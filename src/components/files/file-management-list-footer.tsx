@@ -7,7 +7,9 @@ type FileManagementListFooterProps = {
   visible: boolean;
 };
 
-const FileManagementListFooter: React.FC<FileManagementListFooterProps> = ({ visible }) => {
+const FileManagementListFooter: React.FC<FileManagementListFooterProps> = ({
+  visible,
+}) => {
   if (!visible) return null;
 
   return (

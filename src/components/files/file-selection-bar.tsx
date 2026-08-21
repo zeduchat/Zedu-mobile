@@ -27,15 +27,22 @@ const FileSelectionBar: React.FC<FileSelectionBarProps> = ({
       <View style={styles.selectionActions}>
         <TouchableOpacity style={styles.selectionDeleteBtn} onPress={onDelete}>
           <Ionicons name="trash-outline" size={18} color="#FFF" />
-          <AppText variant="bold" size={14} style={styles.selectionDeleteText}>Delete</AppText>
+          <AppText variant="bold" size={14} style={styles.selectionDeleteText}>
+            Delete
+          </AppText>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.selectionMoveBtn, !canMove && styles.selectionMoveBtnDisabled]}
+          style={[
+            styles.selectionMoveBtn,
+            !canMove && styles.selectionMoveBtnDisabled,
+          ]}
           onPress={() => canMove && onMove()}
           disabled={!canMove}
         >
           <Ionicons name="folder-outline" size={18} color="#FFF" />
-          <AppText variant="bold" size={14} style={styles.selectionMoveText}>Move</AppText>
+          <AppText variant="bold" size={14} style={styles.selectionMoveText}>
+            Move
+          </AppText>
         </TouchableOpacity>
       </View>
     </View>

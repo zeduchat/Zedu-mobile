@@ -1,5 +1,12 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { AppText } from '@/components/ui/text';
 import { Folder } from '@/types/thread';
@@ -23,7 +30,12 @@ type FolderActionsSheetProps = {
 
 const ALL_ACTIONS: FolderAction[] = [
   { key: 'edit', label: 'Edit folder', icon: 'create-outline' },
-  { key: 'delete', label: 'Delete folder', icon: 'trash-outline', destructive: true },
+  {
+    key: 'delete',
+    label: 'Delete folder',
+    icon: 'trash-outline',
+    destructive: true,
+  },
 ];
 
 const FolderActionsSheet: React.FC<FolderActionsSheetProps> = ({
@@ -35,23 +47,30 @@ const FolderActionsSheet: React.FC<FolderActionsSheetProps> = ({
 }) => {
   if (!folder) return null;
 
-  const actions = ALL_ACTIONS.filter((action) => {
+  const actions = ALL_ACTIONS.filter(action => {
     if (action.key === 'delete' || action.key === 'edit') return isOwner;
     return true;
   });
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.container} onPress={e => e.stopPropagation()}>
           <View style={styles.handle} />
-          <AppText variant="bold" size={17} style={styles.title}>Folder actions</AppText>
+          <AppText variant="bold" size={17} style={styles.title}>
+            Folder actions
+          </AppText>
           <AppText size={14} numberOfLines={2} style={styles.subtitle}>
             {folder.name}
           </AppText>
 
           <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
-            {actions.map((action) => (
+            {actions.map(action => (
               <TouchableOpacity
                 key={action.key}
                 style={styles.item}
@@ -64,7 +83,10 @@ const FolderActionsSheet: React.FC<FolderActionsSheetProps> = ({
                 />
                 <AppText
                   size={15}
-                  style={[styles.itemText, action.destructive && styles.destructiveText]}
+                  style={[
+                    styles.itemText,
+                    action.destructive && styles.destructiveText,
+                  ]}
                 >
                   {action.label}
                 </AppText>

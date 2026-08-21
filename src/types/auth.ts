@@ -1,4 +1,4 @@
-export interface AuthFlow{
-    email:string,
-    code:string
+export interface AuthFlow {
+  email: string;
+  code: string;
 }

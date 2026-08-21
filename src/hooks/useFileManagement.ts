@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Share } from 'react-native';
-import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
+import {
+  pick,
+  types,
+  isErrorWithCode,
+  errorCodes,
+} from '@react-native-documents/picker';
 import { FileActionKey } from '@/components/files/file-actions-sheet';
 import { FolderActionKey } from '@/components/files/folder-actions-sheet';
 import { PendingUploadFile } from '@/components/files/upload-confirmation-modal';
@@ -8,8 +13,16 @@ import useFiles from '@/hooks/useFiles';
 import useFolders from '@/hooks/useFolders';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import UseGetOrgMembers from '@/services/org/get-org-members';
-import { createFolder, deleteFolder, updateFolder } from '@/services/files/folders';
-import { deleteFile, moveFile, renameFile } from '@/services/files/file-actions';
+import {
+  createFolder,
+  deleteFolder,
+  updateFolder,
+} from '@/services/files/folders';
+import {
+  deleteFile,
+  moveFile,
+  renameFile,
+} from '@/services/files/file-actions';
 import { useDataContext } from '@/store/useDataContext';
 import { ACTIONS } from '@/store/types';
 import { Folder, Media } from '@/types/thread';
@@ -19,9 +32,17 @@ import {
   FileMode,
   FileSortOption,
 } from '@/utils/file-helpers';
-import { ActiveFilterSheet, DateFilterKey, FileManagementNavigation, FileManagementTab } from '@/types/file-management';
+import {
+  ActiveFilterSheet,
+  DateFilterKey,
+  FileManagementNavigation,
+  FileManagementTab,
+} from '@/types/file-management';
 import { FilesListQueryFilters } from '@/types/files-api';
-import { filterFolders, sortFileResults } from '@/utils/file-management-filters';
+import {
+  filterFolders,
+  sortFileResults,
+} from '@/utils/file-management-filters';
 
 export const useFileManagement = (navigation: FileManagementNavigation) => {
   const { state, dispatch } = useDataContext();
@@ -32,7 +53,9 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
   const [mode, setMode] = useState<FileMode>('all');
   const [activeTab, setActiveTab] = useState<FileManagementTab>('files');
   const [sortBy, setSortBy] = useState<FileSortOption>('newest');
-  const [fileTypeFilter, setFileTypeFilter] = useState<FileCategory | null>(null);
+  const [fileTypeFilter, setFileTypeFilter] = useState<FileCategory | null>(
+    null,
+  );
   const [uploadedByFilter, setUploadedByFilter] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilterKey>('any');
   const [activeSheet, setActiveSheet] = useState<ActiveFilterSheet>(null);
@@ -43,7 +66,9 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [openFolder, setOpenFolder] = useState<Folder | null>(null);
   const [uploadConfirmVisible, setUploadConfirmVisible] = useState(false);
-  const [pendingUploadFiles, setPendingUploadFiles] = useState<PendingUploadFile[]>([]);
+  const [pendingUploadFiles, setPendingUploadFiles] = useState<
+    PendingUploadFile[]
+  >([]);
   const [folderModalVisible, setFolderModalVisible] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [folderSaving, setFolderSaving] = useState(false);
@@ -52,7 +77,9 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
   const [actionFolder, setActionFolder] = useState<Folder | null>(null);
   const [folderActionsVisible, setFolderActionsVisible] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [moveSheetVisible, setMoveSheetVisible] = useState(false);
   const [movingFolderId, setMovingFolderId] = useState<string | null>(null);
   const [renameModalVisible, setRenameModalVisible] = useState(false);
@@ -65,28 +92,28 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
   const needsFolderPicker = moveSheetVisible || selectionMode;
   const currentUserId = user?.user_id ?? user?.id;
 
-  const filterContext = useMemo(() => ({
-    mode,
-    sortBy,
-    uploadedByFilter,
-    dateFilter,
-    searchQuery,
-    currentUserId,
-  }), [
-    mode,
-    sortBy,
-    uploadedByFilter,
-    dateFilter,
-    searchQuery,
-    currentUserId,
-  ]);
+  const filterContext = useMemo(
+    () => ({
+      mode,
+      sortBy,
+      uploadedByFilter,
+      dateFilter,
+      searchQuery,
+      currentUserId,
+    }),
+    [mode, sortBy, uploadedByFilter, dateFilter, searchQuery, currentUserId],
+  );
 
-  const filesApiFilters = useMemo<FilesListQueryFilters>(() => ({
-    type: fileTypeFilter && fileTypeFilter !== 'all' ? fileTypeFilter : undefined,
-    date_modified: dateFilter,
-    owner: uploadedByFilter,
-    file_name: debouncedFileNameSearch || undefined,
-  }), [fileTypeFilter, dateFilter, uploadedByFilter, debouncedFileNameSearch]);
+  const filesApiFilters = useMemo<FilesListQueryFilters>(
+    () => ({
+      type:
+        fileTypeFilter && fileTypeFilter !== 'all' ? fileTypeFilter : undefined,
+      date_modified: dateFilter,
+      owner: uploadedByFilter,
+      file_name: debouncedFileNameSearch || undefined,
+    }),
+    [fileTypeFilter, dateFilter, uploadedByFilter, debouncedFileNameSearch],
+  );
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -113,7 +140,11 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
     refresh: refreshRoot,
     loadMore: loadMoreRoot,
     hasMore: hasMoreRoot,
-  } = useFiles({ mode, enabled: isFilesList && !isFolderView, filters: filesApiFilters });
+  } = useFiles({
+    mode,
+    enabled: isFilesList && !isFolderView,
+    filters: filesApiFilters,
+  });
 
   const {
     files: folderFiles,
@@ -150,21 +181,26 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
 
   const ownerMap = useMemo(() => {
     const map = new Map<string, string>();
-    orgMembers.forEach((member) => {
+    orgMembers.forEach(member => {
       map.set(member.id, member.name || member.username || member.email);
     });
     if (currentUserId) {
-      map.set(currentUserId, user?.full_name || user?.username || user?.email || 'You');
+      map.set(
+        currentUserId,
+        user?.full_name || user?.username || user?.email || 'You',
+      );
     }
     return map;
   }, [orgMembers, user, currentUserId]);
 
   const pickerFolders = useMemo(
-    () => folders.filter((folder) => !folder.deleted_at),
+    () => folders.filter(folder => !folder.deleted_at),
     [folders],
   );
 
-  const activeItemCount = isFoldersTab ? filteredFolders.length : filteredFiles.length;
+  const activeItemCount = isFoldersTab
+    ? filteredFolders.length
+    : filteredFiles.length;
   const activeLoading = isFoldersTab ? foldersLoading : loading;
   const activeRefreshing = isFoldersTab ? foldersRefreshing : refreshing;
   const activeError = isFoldersTab ? foldersError : error;
@@ -183,7 +219,8 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
   );
 
   const isFolderOwner = useCallback(
-    (folder: Folder) => Boolean(currentUserId && folder.user_id === currentUserId),
+    (folder: Folder) =>
+      Boolean(currentUserId && folder.user_id === currentUserId),
     [currentUserId],
   );
 
@@ -214,22 +251,28 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
     setSheetSearch('');
   }, []);
 
-  const openFilterSheet = useCallback((sheet: ActiveFilterSheet) => {
-    if (sheet === 'user') {
-      setSheetSearch(uploadedByFilter || '');
-    }
-    setActiveSheet(sheet);
-  }, [uploadedByFilter]);
+  const openFilterSheet = useCallback(
+    (sheet: ActiveFilterSheet) => {
+      if (sheet === 'user') {
+        setSheetSearch(uploadedByFilter || '');
+      }
+      setActiveSheet(sheet);
+    },
+    [uploadedByFilter],
+  );
 
   const refreshAfterFileChange = useCallback(() => {
     refresh();
     if (isFolderView) refreshFolderFiles();
   }, [isFolderView, refresh, refreshFolderFiles]);
 
-  const openDetail = useCallback((file: Media) => {
-    setSelectedFileId(file.id);
-    navigation.navigate('FileDetail', { fileId: file.id });
-  }, [navigation]);
+  const openDetail = useCallback(
+    (file: Media) => {
+      setSelectedFileId(file.id);
+      navigation.navigate('FileDetail', { fileId: file.id });
+    },
+    [navigation],
+  );
 
   const openFileActions = useCallback((file: Media) => {
     setActionFile(file);
@@ -242,7 +285,7 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
   }, []);
 
   const toggleFileSelection = useCallback((fileId: string) => {
-    setSelectedFileIds((prev) => {
+    setSelectedFileIds(prev => {
       const next = new Set(prev);
       if (next.has(fileId)) next.delete(fileId);
       else next.add(fileId);
@@ -250,41 +293,55 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
     });
   }, []);
 
-  const handleDeleteFiles = useCallback((fileIds: string[], filesForLabel: Media[] = []) => {
-    if (!fileIds.length) return;
+  const handleDeleteFiles = useCallback(
+    (fileIds: string[], filesForLabel: Media[] = []) => {
+      if (!fileIds.length) return;
 
-    const title = fileIds.length === 1 ? 'Delete file' : 'Delete files';
-    const message = fileIds.length === 1
-      ? `Delete "${decodeFileName(filesForLabel[0]?.file_name || 'this file')}"? This action cannot be undone.`
-      : `Delete ${fileIds.length} files? This action cannot be undone.`;
+      const title = fileIds.length === 1 ? 'Delete file' : 'Delete files';
+      const message =
+        fileIds.length === 1
+          ? `Delete "${decodeFileName(
+              filesForLabel[0]?.file_name || 'this file',
+            )}"? This action cannot be undone.`
+          : `Delete ${fileIds.length} files? This action cannot be undone.`;
 
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          const results = await Promise.all(fileIds.map((id) => deleteFile(id)));
-          const failed = results.find((result) => result.error);
-          if (failed?.error) {
+      Alert.alert(title, message, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const results = await Promise.all(
+              fileIds.map(id => deleteFile(id)),
+            );
+            const failed = results.find(result => result.error);
+            if (failed?.error) {
+              dispatch({
+                type: ACTIONS.ERROR,
+                payload:
+                  typeof failed.error === 'string'
+                    ? failed.error
+                    : 'Failed to delete file',
+              });
+              return;
+            }
+
             dispatch({
-              type: ACTIONS.ERROR,
-              payload: typeof failed.error === 'string' ? failed.error : 'Failed to delete file',
+              type: ACTIONS.SUCCESS,
+              payload:
+                fileIds.length === 1
+                  ? 'File deleted successfully'
+                  : 'Files deleted successfully',
             });
-            return;
-          }
-
-          dispatch({
-            type: ACTIONS.SUCCESS,
-            payload: fileIds.length === 1 ? 'File deleted successfully' : 'Files deleted successfully',
-          });
-          closeFileActions();
-          exitSelectionMode();
-          refreshAfterFileChange();
+            closeFileActions();
+            exitSelectionMode();
+            refreshAfterFileChange();
+          },
         },
-      },
-    ]);
-  }, [closeFileActions, dispatch, exitSelectionMode, refreshAfterFileChange]);
+      ]);
+    },
+    [closeFileActions, dispatch, exitSelectionMode, refreshAfterFileChange],
+  );
 
   const handleDeleteFile = useCallback(
     (file: Media) => handleDeleteFiles([file.id], [file]),
@@ -293,121 +350,153 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
 
   const handleDeleteSelectedFiles = useCallback(() => {
     const fileIds = Array.from(selectedFileIds);
-    const selectedFiles = sourceFiles.filter((file) => selectedFileIds.has(file.id));
+    const selectedFiles = sourceFiles.filter(file =>
+      selectedFileIds.has(file.id),
+    );
     handleDeleteFiles(fileIds, selectedFiles);
   }, [handleDeleteFiles, selectedFileIds, sourceFiles]);
 
-  const handleMoveToFolder = useCallback(async (folder: Folder) => {
-    const fileIds = Array.from(selectedFileIds);
-    if (fileIds.length !== 1) return;
+  const handleMoveToFolder = useCallback(
+    async (folder: Folder) => {
+      const fileIds = Array.from(selectedFileIds);
+      if (fileIds.length !== 1) return;
 
-    const [fileId] = fileIds;
-    setMovingFolderId(folder.id);
-    const { error } = await moveFile(fileId, folder.id);
-    setMovingFolderId(null);
+      const [fileId] = fileIds;
+      setMovingFolderId(folder.id);
+      const { error } = await moveFile(fileId, folder.id);
+      setMovingFolderId(null);
 
-    if (error) {
-      dispatch({
-        type: ACTIONS.ERROR,
-        payload: typeof error === 'string' ? error : 'Failed to move file',
-      });
-      return;
-    }
+      if (error) {
+        dispatch({
+          type: ACTIONS.ERROR,
+          payload: typeof error === 'string' ? error : 'Failed to move file',
+        });
+        return;
+      }
 
-    dispatch({ type: ACTIONS.SUCCESS, payload: 'File moved successfully' });
-    setMoveSheetVisible(false);
-    closeFileActions();
-    exitSelectionMode();
-    refresh();
-    refreshFolders();
-    if (isFolderView) refreshFolderFiles();
-  }, [
-    closeFileActions,
-    dispatch,
-    exitSelectionMode,
-    isFolderView,
-    refresh,
-    refreshFolderFiles,
-    refreshFolders,
-    selectedFileIds,
-  ]);
-
-  const handleShareFile = useCallback(async (file: Media) => {
-    try {
-      await Share.share({
-        message: `${decodeFileName(file.file_name)}\n${file.file_link}`,
-        url: file.file_link,
-      });
+      dispatch({ type: ACTIONS.SUCCESS, payload: 'File moved successfully' });
+      setMoveSheetVisible(false);
       closeFileActions();
-    } catch {
-      dispatch({ type: ACTIONS.ERROR, payload: 'Unable to share this file' });
-    }
-  }, [closeFileActions, dispatch]);
+      exitSelectionMode();
+      refresh();
+      refreshFolders();
+      if (isFolderView) refreshFolderFiles();
+    },
+    [
+      closeFileActions,
+      dispatch,
+      exitSelectionMode,
+      isFolderView,
+      refresh,
+      refreshFolderFiles,
+      refreshFolders,
+      selectedFileIds,
+    ],
+  );
 
-  const handleRenameSubmit = useCallback(async (fileName: string) => {
-    if (!renamingFile) return;
+  const handleShareFile = useCallback(
+    async (file: Media) => {
+      try {
+        await Share.share({
+          message: `${decodeFileName(file.file_name)}\n${file.file_link}`,
+          url: file.file_link,
+        });
+        closeFileActions();
+      } catch {
+        dispatch({ type: ACTIONS.ERROR, payload: 'Unable to share this file' });
+      }
+    },
+    [closeFileActions, dispatch],
+  );
 
-    setRenameSaving(true);
-    const { data, error: renameError } = await renameFile(renamingFile.id, fileName);
-    setRenameSaving(false);
+  const handleRenameSubmit = useCallback(
+    async (fileName: string) => {
+      if (!renamingFile) return;
 
-    if (renameError || !data?.data) {
+      setRenameSaving(true);
+      const { data, error: renameError } = await renameFile(
+        renamingFile.id,
+        fileName,
+      );
+      setRenameSaving(false);
+
+      if (renameError || !data?.data) {
+        dispatch({
+          type: ACTIONS.ERROR,
+          payload:
+            typeof renameError === 'string'
+              ? renameError
+              : 'Failed to rename file',
+        });
+        return;
+      }
+
       dispatch({
-        type: ACTIONS.ERROR,
-        payload: typeof renameError === 'string' ? renameError : 'Failed to rename file',
+        type: ACTIONS.SUCCESS,
+        payload: data.message || 'File renamed successfully',
       });
-      return;
-    }
+      setRenameModalVisible(false);
+      setRenamingFile(null);
+      closeFileActions();
+      refreshAfterFileChange();
+    },
+    [closeFileActions, dispatch, refreshAfterFileChange, renamingFile],
+  );
 
-    dispatch({ type: ACTIONS.SUCCESS, payload: data.message || 'File renamed successfully' });
-    setRenameModalVisible(false);
-    setRenamingFile(null);
-    closeFileActions();
-    refreshAfterFileChange();
-  }, [closeFileActions, dispatch, refreshAfterFileChange, renamingFile]);
+  const handleFileAction = useCallback(
+    (action: FileActionKey) => {
+      if (!actionFile) return;
 
-  const handleFileAction = useCallback((action: FileActionKey) => {
-    if (!actionFile) return;
+      switch (action) {
+        case 'select':
+          closeFileActions();
+          setSelectionMode(true);
+          setSelectedFileIds(new Set([actionFile.id]));
+          break;
+        case 'move':
+          closeFileActions();
+          setSelectedFileIds(new Set([actionFile.id]));
+          setMoveSheetVisible(true);
+          break;
+        case 'delete':
+          closeFileActions();
+          handleDeleteFile(actionFile);
+          break;
+        case 'preview':
+          closeFileActions();
+          openDetail(actionFile);
+          break;
+        case 'share':
+          handleShareFile(actionFile);
+          break;
+        case 'rename':
+          closeFileActions();
+          setRenamingFile(actionFile);
+          setRenameModalVisible(true);
+          break;
+        default:
+          break;
+      }
+    },
+    [
+      actionFile,
+      closeFileActions,
+      handleDeleteFile,
+      handleShareFile,
+      openDetail,
+    ],
+  );
 
-    switch (action) {
-      case 'select':
-        closeFileActions();
-        setSelectionMode(true);
-        setSelectedFileIds(new Set([actionFile.id]));
-        break;
-      case 'move':
-        closeFileActions();
-        setSelectedFileIds(new Set([actionFile.id]));
-        setMoveSheetVisible(true);
-        break;
-      case 'delete':
-        closeFileActions();
-        handleDeleteFile(actionFile);
-        break;
-      case 'preview':
-        closeFileActions();
-        openDetail(actionFile);
-        break;
-      case 'share':
-        handleShareFile(actionFile);
-        break;
-      case 'rename':
-        closeFileActions();
-        setRenamingFile(actionFile);
-        setRenameModalVisible(true);
-        break;
-      default:
-        break;
-    }
-  }, [actionFile, closeFileActions, handleDeleteFile, handleShareFile, openDetail]);
-
-  const handleFilePress = useCallback((file: Media) => {
-    if (selectionMode) {
-      toggleFileSelection(file.id);
-      return;
-    }
-    openDetail(file);
-  }, [openDetail, selectionMode, toggleFileSelection]);
+  const handleFilePress = useCallback(
+    (file: Media) => {
+      if (selectionMode) {
+        toggleFileSelection(file.id);
+        return;
+      }
+      openDetail(file);
+    },
+    [openDetail, selectionMode, toggleFileSelection],
+  );
 
   const handlePickFiles = useCallback(async () => {
     try {
@@ -418,21 +507,24 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
 
       if (!results.length) return;
 
-      setPendingUploadFiles(results.map((file) => ({
-        uri: file.uri,
-        name: file.name || 'file',
-        type: file.type || 'application/octet-stream',
-        size: file.size ?? null,
-      })));
+      setPendingUploadFiles(
+        results.map(file => ({
+          uri: file.uri,
+          name: file.name || 'file',
+          type: file.type || 'application/octet-stream',
+          size: file.size ?? null,
+        })),
+      );
       setUploadConfirmVisible(true);
     } catch (err) {
-      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) return;
+      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED)
+        return;
       dispatch({ type: ACTIONS.ERROR, payload: 'Unable to open file picker' });
     }
   }, [dispatch]);
 
   const handleRemovePendingFile = useCallback((index: number) => {
-    setPendingUploadFiles((prev) => {
+    setPendingUploadFiles(prev => {
       const next = prev.filter((_, i) => i !== index);
       if (!next.length) setUploadConfirmVisible(false);
       return next;
@@ -446,7 +538,10 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
     if (uploadError || !data) {
       dispatch({
         type: ACTIONS.ERROR,
-        payload: typeof uploadError === 'string' ? uploadError : 'Failed to upload files',
+        payload:
+          typeof uploadError === 'string'
+            ? uploadError
+            : 'Failed to upload files',
       });
       return;
     }
@@ -464,109 +559,149 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
     setFolderModalVisible(true);
   }, []);
 
-  const handleFolderSubmit = useCallback(async (name: string) => {
-    setFolderSaving(true);
+  const handleFolderSubmit = useCallback(
+    async (name: string) => {
+      setFolderSaving(true);
 
-    if (editingFolder) {
-      const { data, error } = await updateFolder(editingFolder.id, name);
-      setFolderSaving(false);
-
-      if (error || !data?.data) {
-        dispatch({
-          type: ACTIONS.ERROR,
-          payload: typeof error === 'string' ? error : 'Failed to update folder',
-        });
-        return;
-      }
-
-      dispatch({ type: ACTIONS.SUCCESS, payload: data.message || 'Folder updated successfully' });
-    } else {
-      if (!orgId) {
+      if (editingFolder) {
+        const { data, error } = await updateFolder(editingFolder.id, name);
         setFolderSaving(false);
-        dispatch({ type: ACTIONS.ERROR, payload: 'Organisation not found' });
-        return;
+
+        if (error || !data?.data) {
+          dispatch({
+            type: ACTIONS.ERROR,
+            payload:
+              typeof error === 'string' ? error : 'Failed to update folder',
+          });
+          return;
+        }
+
+        dispatch({
+          type: ACTIONS.SUCCESS,
+          payload: data.message || 'Folder updated successfully',
+        });
+      } else {
+        if (!orgId) {
+          setFolderSaving(false);
+          dispatch({ type: ACTIONS.ERROR, payload: 'Organisation not found' });
+          return;
+        }
+
+        const { data, error } = await createFolder(name, orgId);
+        setFolderSaving(false);
+
+        if (error || !data?.data) {
+          dispatch({
+            type: ACTIONS.ERROR,
+            payload:
+              typeof error === 'string' ? error : 'Failed to create folder',
+          });
+          return;
+        }
+
+        dispatch({
+          type: ACTIONS.SUCCESS,
+          payload: data.message || 'Folder created successfully',
+        });
       }
 
-      const { data, error } = await createFolder(name, orgId);
-      setFolderSaving(false);
+      closeFolderModal();
+      setActiveTab('folders');
+      refreshFolders();
+    },
+    [closeFolderModal, dispatch, editingFolder, orgId, refreshFolders],
+  );
 
-      if (error || !data?.data) {
+  const handleDeleteFolder = useCallback(
+    async (folder: Folder) => {
+      const { data, error } = await deleteFolder(folder.id);
+
+      if (error) {
         dispatch({
           type: ACTIONS.ERROR,
-          payload: typeof error === 'string' ? error : 'Failed to create folder',
+          payload:
+            typeof error === 'string' ? error : 'Failed to delete folder',
         });
         return;
       }
 
-      dispatch({ type: ACTIONS.SUCCESS, payload: data.message || 'Folder created successfully' });
-    }
-
-    closeFolderModal();
-    setActiveTab('folders');
-    refreshFolders();
-  }, [closeFolderModal, dispatch, editingFolder, orgId, refreshFolders]);
-
-  const handleDeleteFolder = useCallback(async (folder: Folder) => {
-    const { data, error } = await deleteFolder(folder.id);
-
-    if (error) {
       dispatch({
-        type: ACTIONS.ERROR,
-        payload: typeof error === 'string' ? error : 'Failed to delete folder',
+        type: ACTIONS.SUCCESS,
+        payload: data?.message || 'Folder deleted successfully',
       });
-      return;
-    }
+      if (openFolder?.id === folder.id) {
+        setOpenFolder(null);
+      }
+      setSelectedFolderId(null);
+      closeFolderModal();
+      closeFolderActions();
+      refreshFolders();
+    },
+    [
+      closeFolderActions,
+      closeFolderModal,
+      dispatch,
+      openFolder,
+      refreshFolders,
+    ],
+  );
 
-    dispatch({ type: ACTIONS.SUCCESS, payload: data?.message || 'Folder deleted successfully' });
-    if (openFolder?.id === folder.id) {
-      setOpenFolder(null);
-    }
-    setSelectedFolderId(null);
-    closeFolderModal();
-    closeFolderActions();
-    refreshFolders();
-  }, [closeFolderActions, closeFolderModal, dispatch, openFolder, refreshFolders]);
+  const handleDeleteFolderConfirm = useCallback(
+    (folder: Folder) => {
+      Alert.alert(
+        'Delete folder',
+        `Delete "${folder.name}"? This action cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => handleDeleteFolder(folder),
+          },
+        ],
+      );
+    },
+    [handleDeleteFolder],
+  );
 
-  const handleDeleteFolderConfirm = useCallback((folder: Folder) => {
-    Alert.alert(
-      'Delete folder',
-      `Delete "${folder.name}"? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => handleDeleteFolder(folder) },
-      ],
-    );
-  }, [handleDeleteFolder]);
+  const handleFolderAction = useCallback(
+    (action: FolderActionKey) => {
+      if (!actionFolder) return;
 
-  const handleFolderAction = useCallback((action: FolderActionKey) => {
-    if (!actionFolder) return;
+      switch (action) {
+        case 'edit':
+          closeFolderActions();
+          setEditingFolder(actionFolder);
+          setFolderModalVisible(true);
+          break;
+        case 'delete':
+          closeFolderActions();
+          handleDeleteFolderConfirm(actionFolder);
+          break;
+        default:
+          break;
+      }
+    },
+    [actionFolder, closeFolderActions, handleDeleteFolderConfirm],
+  );
 
-    switch (action) {
-      case 'edit':
-        closeFolderActions();
-        setEditingFolder(actionFolder);
-        setFolderModalVisible(true);
-        break;
-      case 'delete':
-        closeFolderActions();
-        handleDeleteFolderConfirm(actionFolder);
-        break;
-      default:
-        break;
-    }
-  }, [actionFolder, closeFolderActions, handleDeleteFolderConfirm]);
+  const handleFolderPress = useCallback(
+    (folder: Folder) => {
+      setSelectedFolderId(folder.id);
+      setOpenFolder(folder);
+      exitSelectionMode();
+    },
+    [exitSelectionMode],
+  );
 
-  const handleFolderPress = useCallback((folder: Folder) => {
-    setSelectedFolderId(folder.id);
-    setOpenFolder(folder);
-    exitSelectionMode();
-  }, [exitSelectionMode]);
-
-  const handleFolderLongPress = useCallback((folder: Folder) => {
-    if (isFolderOwner(folder)) {
-      openFolderActions(folder);
-    }
-  }, [isFolderOwner, openFolderActions]);
+  const handleFolderLongPress = useCallback(
+    (folder: Folder) => {
+      if (isFolderOwner(folder)) {
+        openFolderActions(folder);
+      }
+    },
+    [isFolderOwner, openFolderActions],
+  );
 
   const handleHeaderBack = useCallback(() => {
     if (selectionMode) {
@@ -588,8 +723,10 @@ export const useFileManagement = (navigation: FileManagementNavigation) => {
 
   const sheetUsers = useMemo(() => {
     const query = sheetSearch.trim().toLowerCase();
-    return orgMembers.filter((member) => {
-      const label = `${member.name || ''} ${member.username || ''} ${member.email || ''}`.toLowerCase();
+    return orgMembers.filter(member => {
+      const label = `${member.name || ''} ${member.username || ''} ${
+        member.email || ''
+      }`.toLowerCase();
       return !query || label.includes(query);
     });
   }, [orgMembers, sheetSearch]);

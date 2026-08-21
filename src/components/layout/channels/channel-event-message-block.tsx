@@ -14,7 +14,11 @@ type Props = {
 const statusStyle = (status?: string) => {
   const key = (status || '').toLowerCase();
   if (key === 'success') {
-    return { bg: '#E8F5E9', text: '#2E7D32', icon: 'checkmark-circle' as const };
+    return {
+      bg: '#E8F5E9',
+      text: '#2E7D32',
+      icon: 'checkmark-circle' as const,
+    };
   }
   if (key === 'pending') {
     return { bg: '#FFF8E1', text: '#F9A825', icon: 'time' as const };
@@ -22,7 +26,11 @@ const statusStyle = (status?: string) => {
   if (key === 'failed' || key === 'error') {
     return { bg: '#FFEBEE', text: '#C62828', icon: 'close-circle' as const };
   }
-  return { bg: '#F3F4F6', text: '#54656F', icon: 'information-circle' as const };
+  return {
+    bg: '#F3F4F6',
+    text: '#54656F',
+    icon: 'information-circle' as const,
+  };
 };
 
 export const ChannelEventMessageBlock = ({ data }: Props) => {
@@ -36,9 +44,19 @@ export const ChannelEventMessageBlock = ({ data }: Props) => {
           {data.eventName}
         </AppText>
         {statusLabel ? (
-          <View style={[styles.statusPill, { backgroundColor: statusTheme.bg }]}>
-            <Ionicons name={statusTheme.icon} size={14} color={statusTheme.text} />
-            <AppText size={11} variant="medium" style={{ color: statusTheme.text, marginLeft: 4 }}>
+          <View
+            style={[styles.statusPill, { backgroundColor: statusTheme.bg }]}
+          >
+            <Ionicons
+              name={statusTheme.icon}
+              size={14}
+              color={statusTheme.text}
+            />
+            <AppText
+              size={11}
+              variant="medium"
+              style={{ color: statusTheme.text, marginLeft: 4 }}
+            >
               {statusLabel}
             </AppText>
           </View>
@@ -47,7 +65,7 @@ export const ChannelEventMessageBlock = ({ data }: Props) => {
 
       {data.fields.length > 0 ? (
         <View style={styles.fields}>
-          {data.fields.map((field) => (
+          {data.fields.map(field => (
             <View key={`${field.label}-${field.value}`} style={styles.fieldRow}>
               <AppText size={12} style={styles.fieldLabel}>
                 {field.label}

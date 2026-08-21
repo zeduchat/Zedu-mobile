@@ -69,10 +69,14 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, ownerName }) => {
       const localPath = `${RNFS.CachesDirectoryPath}/${file.id}_${safeName}`;
       const exists = await RNFS.exists(localPath);
       if (!exists) {
-        await RNFS.downloadFile({ fromUrl: file.file_link, toFile: localPath }).promise;
+        await RNFS.downloadFile({ fromUrl: file.file_link, toFile: localPath })
+          .promise;
       }
       const uri = Platform.OS === 'android' ? `file://${localPath}` : localPath;
-      await viewDocument({ uri, mimeType: file.mime_type || 'application/pdf' });
+      await viewDocument({
+        uri,
+        mimeType: file.mime_type || 'application/pdf',
+      });
     } catch {
       ShowNotify('Preview', 'Unable to open this document in-app.');
     } finally {
@@ -102,10 +106,10 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, ownerName }) => {
           resizeMode="contain"
           paused={paused || isSliding}
           controls={false}
-          onProgress={(data) => {
+          onProgress={data => {
             if (!isSliding) setProgress(data.currentTime);
           }}
-          onLoad={(data) => setDuration(data.duration)}
+          onLoad={data => setDuration(data.duration)}
           onEnd={() => {
             setPaused(true);
             videoRef.current?.seek(0);
@@ -123,17 +127,19 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, ownerName }) => {
           )}
         </TouchableOpacity>
         <View style={styles.videoControls}>
-          <AppText size={12} style={styles.timeLabel}>{formatTime(progress)}</AppText>
+          <AppText size={12} style={styles.timeLabel}>
+            {formatTime(progress)}
+          </AppText>
           <Slider
             style={styles.slider}
             minimumValue={0}
             maximumValue={duration || 1}
             value={progress}
-            onValueChange={(value) => {
+            onValueChange={value => {
               setIsSliding(true);
               videoRef.current?.seek(value);
             }}
-            onSlidingComplete={(value) => {
+            onSlidingComplete={value => {
               setIsSliding(false);
               setProgress(value);
             }}
@@ -141,7 +147,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, ownerName }) => {
             maximumTrackTintColor="#D8D8D8"
             thumbTintColor={Colors.primary}
           />
-          <AppText size={12} style={styles.timeLabel}>{formatTime(duration)}</AppText>
+          <AppText size={12} style={styles.timeLabel}>
+            {formatTime(duration)}
+          </AppText>
         </View>
       </View>
     );
@@ -153,20 +161,34 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, ownerName }) => {
         <View style={[styles.docIcon, { backgroundColor: theme.color }]}>
           <Ionicons name="musical-notes" size={28} color="#FFF" />
         </View>
-        <AppText variant="bold" size={16} style={styles.audioTitle} numberOfLines={2}>
+        <AppText
+          variant="bold"
+          size={16}
+          style={styles.audioTitle}
+          numberOfLines={2}
+        >
           {displayName}
         </AppText>
         <AppText size={13} style={styles.audioMeta}>
-          {formatFileSize(file.size)}{ownerName ? ` • ${ownerName}` : ''}
+          {formatFileSize(file.size)}
+          {ownerName ? ` • ${ownerName}` : ''}
         </AppText>
         <View style={styles.audioPlayerWrap}>
-          <AudioMessagePlayer audioUrl={file.file_link} media={file} item={{ id: file.id }} />
+          <AudioMessagePlayer
+            audioUrl={file.file_link}
+            media={file}
+            item={{ id: file.id }}
+          />
         </View>
       </View>
     );
   }
 
-  if (isDocumentFile(file) || isSpreadsheetFile(file) || isPresentationFile(file)) {
+  if (
+    isDocumentFile(file) ||
+    isSpreadsheetFile(file) ||
+    isPresentationFile(file)
+  ) {
     const displayName = decodeFileName(file.file_name);
 
     if (isInAppPreviewSupported(displayName, file.mime_type)) {
@@ -180,19 +202,34 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, ownerName }) => {
     return (
       <View style={styles.docCard}>
         <View style={[styles.docIcon, { backgroundColor: theme.color }]}>
-          <AppText variant="bold" style={styles.docLabel}>{theme.label}</AppText>
+          <AppText variant="bold" style={styles.docLabel}>
+            {theme.label}
+          </AppText>
         </View>
-        <AppText variant="bold" size={16} style={styles.docTitle} numberOfLines={2}>
+        <AppText
+          variant="bold"
+          size={16}
+          style={styles.docTitle}
+          numberOfLines={2}
+        >
           {displayName}
         </AppText>
-        <AppText size={13} style={styles.docMeta}>{formatFileSize(file.size)}</AppText>
-        <TouchableOpacity style={styles.openDocBtn} onPress={openDocument} activeOpacity={0.85}>
+        <AppText size={13} style={styles.docMeta}>
+          {formatFileSize(file.size)}
+        </AppText>
+        <TouchableOpacity
+          style={styles.openDocBtn}
+          onPress={openDocument}
+          activeOpacity={0.85}
+        >
           {openingDoc ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <>
               <Ionicons name="eye-outline" size={18} color="#FFF" />
-              <AppText variant="bold" size={14} style={styles.openDocText}>Open document</AppText>
+              <AppText variant="bold" size={14} style={styles.openDocText}>
+                Open document
+              </AppText>
             </>
           )}
         </TouchableOpacity>
@@ -205,10 +242,17 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, ownerName }) => {
       <View style={[styles.docIcon, { backgroundColor: theme.color }]}>
         <Ionicons name="document" size={28} color="#FFF" />
       </View>
-      <AppText variant="bold" size={16} style={styles.docTitle} numberOfLines={2}>
+      <AppText
+        variant="bold"
+        size={16}
+        style={styles.docTitle}
+        numberOfLines={2}
+      >
         {displayName}
       </AppText>
-      <AppText size={13} style={styles.docMeta}>{formatFileSize(file.size)}</AppText>
+      <AppText size={13} style={styles.docMeta}>
+        {formatFileSize(file.size)}
+      </AppText>
     </View>
   );
 };

@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import {
   Animated,
-  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -31,13 +30,30 @@ export const FileManagementPopover: React.FC<FileManagementPopoverProps> = ({
     if (show) {
       setIsVisible(true);
       Animated.parallel([
-        Animated.spring(scaleAnim, { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
-        Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(scaleAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
-        Animated.timing(opacityAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(scaleAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
       ]).start(() => {
         setIsVisible(false);
         scaleAnim.setValue(0);
@@ -79,15 +95,29 @@ export const FileManagementPopover: React.FC<FileManagementPopoverProps> = ({
             ]}
           >
             <TouchableOpacity style={styles.menuItem} onPress={handleUpload}>
-              <Ionicons name="cloud-upload-outline" size={22} color="#171A1F" style={styles.menuIcon} />
-              <AppText variant="medium" size={15} style={styles.menuText}>Upload file</AppText>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={22}
+                color="#171A1F"
+                style={styles.menuIcon}
+              />
+              <AppText variant="medium" size={15} style={styles.menuText}>
+                Upload file
+              </AppText>
             </TouchableOpacity>
 
             <View style={styles.separator} />
 
             <TouchableOpacity style={styles.menuItem} onPress={handleNewFolder}>
-              <Ionicons name="folder-outline" size={22} color="#171A1F" style={styles.menuIcon} />
-              <AppText variant="medium" size={15} style={styles.menuText}>New Folder</AppText>
+              <Ionicons
+                name="folder-outline"
+                size={22}
+                color="#171A1F"
+                style={styles.menuIcon}
+              />
+              <AppText variant="medium" size={15} style={styles.menuText}>
+                New Folder
+              </AppText>
             </TouchableOpacity>
           </Animated.View>
         </>
@@ -100,15 +130,20 @@ export const FileManagementPopover: React.FC<FileManagementPopoverProps> = ({
       >
         <Animated.View
           style={{
-            transform: [{
-              rotate: opacityAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', '45deg'],
-              }),
-            }],
+            transform: [
+              {
+                rotate: opacityAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0deg', '45deg'],
+                }),
+              },
+            ],
           }}
         >
-          <FastImage source={require('@/assets/icons/plus.png')} style={styles.plusIcon} />
+          <FastImage
+            source={require('@/assets/icons/plus.png')}
+            style={styles.plusIcon}
+          />
         </Animated.View>
       </TouchableOpacity>
     </View>
@@ -147,12 +182,25 @@ const styles = StyleSheet.create({
     paddingVertical: normalize(4),
     zIndex: 101,
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 16 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+      },
       android: { elevation: 12 },
     }),
   },
-  menuItem: { flexDirection: 'row', alignItems: 'center', padding: normalize(16) },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: normalize(16),
+  },
   menuIcon: { marginRight: 12 },
   menuText: { color: '#171A1F' },
-  separator: { height: 1, backgroundColor: '#F3F4F6', marginHorizontal: normalize(16) },
+  separator: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: normalize(16),
+  },
 });

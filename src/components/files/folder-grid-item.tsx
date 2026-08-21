@@ -33,7 +33,9 @@ const FolderGridItem: React.FC<FolderGridItemProps> = ({
     <AppText size={12} numberOfLines={2} style={styles.gridName}>
       {folder.name}
     </AppText>
-    <AppText size={11} style={styles.gridSize}>{formatItemCount(folder.item_count)}</AppText>
+    <AppText size={11} style={styles.gridSize}>
+      {formatItemCount(folder.item_count)}
+    </AppText>
   </TouchableOpacity>
 );
 

@@ -37,10 +37,20 @@ const UploadConfirmationModal: React.FC<UploadConfirmationModalProps> = ({
   onConfirm,
   onRemove,
 }) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <Pressable style={styles.backdrop} onPress={uploading ? undefined : onClose}>
-      <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-        <AppText variant="bold" size={18} style={styles.title}>Upload files</AppText>
+  <Modal
+    visible={visible}
+    transparent
+    animationType="fade"
+    onRequestClose={onClose}
+  >
+    <Pressable
+      style={styles.backdrop}
+      onPress={uploading ? undefined : onClose}
+    >
+      <Pressable style={styles.card} onPress={e => e.stopPropagation()}>
+        <AppText variant="bold" size={18} style={styles.title}>
+          Upload files
+        </AppText>
         <AppText size={14} style={styles.subtitle}>
           Review the selected files before uploading.
         </AppText>
@@ -49,16 +59,27 @@ const UploadConfirmationModal: React.FC<UploadConfirmationModalProps> = ({
           {files.map((file, index) => (
             <View key={`${file.uri}-${index}`} style={styles.fileRow}>
               <View style={styles.fileIcon}>
-                <Ionicons name="document-outline" size={20} color={Colors.primary} />
+                <Ionicons
+                  name="document-outline"
+                  size={20}
+                  color={Colors.primary}
+                />
               </View>
               <View style={styles.fileInfo}>
-                <AppText size={14} numberOfLines={2} style={styles.fileName}>{file.name}</AppText>
+                <AppText size={14} numberOfLines={2} style={styles.fileName}>
+                  {file.name}
+                </AppText>
                 {file.size != null && (
-                  <AppText size={12} style={styles.fileSize}>{formatFileSize(file.size)}</AppText>
+                  <AppText size={12} style={styles.fileSize}>
+                    {formatFileSize(file.size)}
+                  </AppText>
                 )}
               </View>
               {!uploading && (
-                <TouchableOpacity onPress={() => onRemove(index)} style={styles.removeBtn}>
+                <TouchableOpacity
+                  onPress={() => onRemove(index)}
+                  style={styles.removeBtn}
+                >
                   <Ionicons name="close-circle" size={22} color="#8696A0" />
                 </TouchableOpacity>
               )}
@@ -73,10 +94,15 @@ const UploadConfirmationModal: React.FC<UploadConfirmationModalProps> = ({
             disabled={uploading}
             activeOpacity={0.8}
           >
-            <AppText variant="medium" size={15} style={styles.cancelText}>Cancel</AppText>
+            <AppText variant="medium" size={15} style={styles.cancelText}>
+              Cancel
+            </AppText>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.uploadBtn, (uploading || !files.length) && styles.uploadBtnDisabled]}
+            style={[
+              styles.uploadBtn,
+              (uploading || !files.length) && styles.uploadBtnDisabled,
+            ]}
             onPress={onConfirm}
             disabled={uploading || !files.length}
             activeOpacity={0.8}

@@ -38,7 +38,9 @@ const FileListItem: React.FC<FileListItemProps> = ({
       style={[styles.row, selected && styles.rowSelected]}
     >
       <View style={styles.nameCell}>
-        <View style={[styles.iconWrap, { backgroundColor: `${theme.color}14` }]}>
+        <View
+          style={[styles.iconWrap, { backgroundColor: `${theme.color}14` }]}
+        >
           {showThumbnail ? (
             <FastImage
               source={{ uri: file.file_link }}
@@ -54,7 +56,12 @@ const FileListItem: React.FC<FileListItemProps> = ({
             </View>
           )}
         </View>
-        <AppText variant="medium" size={14} numberOfLines={1} style={styles.fileName}>
+        <AppText
+          variant="medium"
+          size={14}
+          numberOfLines={1}
+          style={styles.fileName}
+        >
           {displayName}
         </AppText>
       </View>

@@ -44,14 +44,21 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.backdrop} onPress={isBusy ? undefined : onClose}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.card} onPress={e => e.stopPropagation()}>
           <AppText variant="bold" size={18} style={styles.title}>
             {mode === 'create' ? 'New Folder' : 'Edit Folder'}
           </AppText>
           <AppText size={14} style={styles.subtitle}>
-            {mode === 'create' ? 'Enter a name for your new folder.' : 'Update the folder name.'}
+            {mode === 'create'
+              ? 'Enter a name for your new folder.'
+              : 'Update the folder name.'}
           </AppText>
 
           <TextInput
@@ -71,10 +78,15 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({
               disabled={isBusy}
               activeOpacity={0.8}
             >
-              <AppText variant="medium" size={15} style={styles.cancelText}>Cancel</AppText>
+              <AppText variant="medium" size={15} style={styles.cancelText}>
+                Cancel
+              </AppText>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.saveBtn, (!name.trim() || isBusy) && styles.saveBtnDisabled]}
+              style={[
+                styles.saveBtn,
+                (!name.trim() || isBusy) && styles.saveBtnDisabled,
+              ]}
               onPress={handleSubmit}
               disabled={!name.trim() || isBusy}
               activeOpacity={0.8}

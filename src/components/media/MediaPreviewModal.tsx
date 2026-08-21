@@ -31,14 +31,23 @@ const isVideo = (mime: string, fileName: string) => {
   if (mime && mime.startsWith('video')) return true;
   if (fileName) {
     const ext = fileName.toLowerCase();
-    return ext.endsWith('.mp4') || ext.endsWith('.mov') || ext.endsWith('.avi') || ext.endsWith('.mkv');
+    return (
+      ext.endsWith('.mp4') ||
+      ext.endsWith('.mov') ||
+      ext.endsWith('.avi') ||
+      ext.endsWith('.mkv')
+    );
   }
   return false;
 };
 
 const isImage = (mime: string) => mime && mime.startsWith('image');
 
-const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ visible, item, onClose }) => {
+const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
+  visible,
+  item,
+  onClose,
+}) => {
   if (!item) return null;
   const video = isVideo(item.mime_type, item.file_name);
   const image = isImage(item.mime_type);
@@ -73,7 +82,11 @@ const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ visible, item, on
           )}
           {!image && !video && (
             <View style={styles.filePreviewBox}>
-              <Ionicons name="document-outline" size={48} color={Colors.primary} />
+              <Ionicons
+                name="document-outline"
+                size={48}
+                color={Colors.primary}
+              />
               <AppText style={styles.fileName}>{item.file_name}</AppText>
             </View>
           )}

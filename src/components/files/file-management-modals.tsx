@@ -43,7 +43,9 @@ const FileManagementModals: React.FC<FileManagementModalsProps> = ({ vm }) => (
 
     <RenameFileModal
       visible={vm.renameModalVisible}
-      initialName={vm.renamingFile ? decodeFileName(vm.renamingFile.file_name) : ''}
+      initialName={
+        vm.renamingFile ? decodeFileName(vm.renamingFile.file_name) : ''
+      }
       loading={vm.renameSaving}
       onClose={() => {
         if (vm.renameSaving) return;

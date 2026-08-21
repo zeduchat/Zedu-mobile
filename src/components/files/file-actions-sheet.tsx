@@ -1,12 +1,24 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { AppText } from '@/components/ui/text';
-import { Colors } from '@/theme/colors';
 import { Media } from '@/types/thread';
 import { decodeFileName } from '@/utils/file-helpers';
 
-export type FileActionKey = 'select' | 'move' | 'delete' | 'preview' | 'share' | 'rename';
+export type FileActionKey =
+  | 'select'
+  | 'move'
+  | 'delete'
+  | 'preview'
+  | 'share'
+  | 'rename';
 
 type FileAction = {
   key: FileActionKey;
@@ -41,23 +53,30 @@ const FileActionsSheet: React.FC<FileActionsSheetProps> = ({
 }) => {
   if (!file) return null;
 
-  const actions = ALL_ACTIONS.filter((action) => {
+  const actions = ALL_ACTIONS.filter(action => {
     if (action.key === 'delete') return isOwner;
     return true;
   });
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.container} onPress={e => e.stopPropagation()}>
           <View style={styles.handle} />
-          <AppText variant="bold" size={17} style={styles.title}>File actions</AppText>
+          <AppText variant="bold" size={17} style={styles.title}>
+            File actions
+          </AppText>
           <AppText size={14} numberOfLines={2} style={styles.subtitle}>
             {decodeFileName(file.file_name)}
           </AppText>
 
           <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
-            {actions.map((action) => (
+            {actions.map(action => (
               <TouchableOpacity
                 key={action.key}
                 style={styles.item}
@@ -70,7 +89,10 @@ const FileActionsSheet: React.FC<FileActionsSheetProps> = ({
                 />
                 <AppText
                   size={15}
-                  style={[styles.itemText, action.destructive && styles.destructiveText]}
+                  style={[
+                    styles.itemText,
+                    action.destructive && styles.destructiveText,
+                  ]}
                 >
                   {action.label}
                 </AppText>

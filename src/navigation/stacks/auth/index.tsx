@@ -14,9 +14,18 @@ const Stack = createStackNavigator<AuthStackParamList>();
 
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="ForgotPasswordEmail" component={ForgotPasswordEmailScreen} />
-    <Stack.Screen name="ForgotPasswordCode" component={ForgotPasswordCodeScreen} />
-    <Stack.Screen name="ForgotPasswordReset" component={ForgotPasswordResetScreen} />
+    <Stack.Screen
+      name="ForgotPasswordEmail"
+      component={ForgotPasswordEmailScreen}
+    />
+    <Stack.Screen
+      name="ForgotPasswordCode"
+      component={ForgotPasswordCodeScreen}
+    />
+    <Stack.Screen
+      name="ForgotPasswordReset"
+      component={ForgotPasswordResetScreen}
+    />
   </Stack.Navigator>
 );
 

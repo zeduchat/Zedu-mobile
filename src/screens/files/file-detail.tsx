@@ -36,8 +36,12 @@ type Props = {
 
 const DetailRow = ({ label, value }: { label: string; value: string }) => (
   <View style={styles.detailRow}>
-    <AppText size={13} style={styles.detailLabel}>{label}</AppText>
-    <AppText size={14} variant="medium" style={styles.detailValue}>{value}</AppText>
+    <AppText size={13} style={styles.detailLabel}>
+      {label}
+    </AppText>
+    <AppText size={14} variant="medium" style={styles.detailValue}>
+      {value}
+    </AppText>
   </View>
 );
 
@@ -74,14 +78,16 @@ const FileDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const ownerName = useMemo(() => {
     if (!file) return 'Unknown';
-    const member = orgMembers.find((item) => item.id === file.user_id);
+    const member = orgMembers.find(item => item.id === file.user_id);
     return member?.name || member?.username || member?.email || 'Unknown';
   }, [file, orgMembers]);
 
   const channelName = useMemo(() => {
     if (!file?.channel_id) return '—';
     const channel = userChannels.find(
-      (item) => item.channel_id === file.channel_id || item.channels_id === file.channel_id,
+      item =>
+        item.channel_id === file.channel_id ||
+        item.channels_id === file.channel_id,
     );
     return channel?.name ? `# ${channel.name}` : '—';
   }, [file, userChannels]);
@@ -115,7 +121,10 @@ const FileDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <Container>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.iconBtn}
+        >
           <Ionicons name="arrow-back" size={24} color="#222" />
         </TouchableOpacity>
         <AppText variant="bold" style={styles.headerTitle} numberOfLines={1}>
@@ -137,10 +146,15 @@ const FileDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       ) : error || !file ? (
         <View style={styles.centered}>
-          <AppText style={styles.errorText}>{error || 'File not found'}</AppText>
+          <AppText style={styles.errorText}>
+            {error || 'File not found'}
+          </AppText>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           <FilePreview file={file} ownerName={ownerName} />
 
           <View style={styles.infoCard}>
@@ -155,24 +169,47 @@ const FileDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                 </AppText>
               </View>
               <View>
-                <AppText size={12} style={styles.metaLabel}>Owner</AppText>
-                <AppText variant="medium" size={15}>{ownerName}</AppText>
+                <AppText size={12} style={styles.metaLabel}>
+                  Owner
+                </AppText>
+                <AppText variant="medium" size={15}>
+                  {ownerName}
+                </AppText>
               </View>
             </View>
 
             <View style={styles.divider} />
 
-            <DetailRow label="Access" value={capitalizeAccess(file.access_type)} />
+            <DetailRow
+              label="Access"
+              value={capitalizeAccess(file.access_type)}
+            />
             <DetailRow label="Size" value={formatFileSize(file.size)} />
-            <DetailRow label="Type" value={(file.file_type || '').toUpperCase()} />
+            <DetailRow
+              label="Type"
+              value={(file.file_type || '').toUpperCase()}
+            />
             <DetailRow label="Channel" value={channelName} />
-            <DetailRow label="Created" value={moment(file.created_at).format('MMM D, YYYY • h:mm A')} />
-            <DetailRow label="Modified" value={moment(file.updated_at).format('MMM D, YYYY • h:mm A')} />
+            <DetailRow
+              label="Created"
+              value={moment(file.created_at).format('MMM D, YYYY • h:mm A')}
+            />
+            <DetailRow
+              label="Modified"
+              value={moment(file.updated_at).format('MMM D, YYYY • h:mm A')}
+            />
             <DetailRow
               label="Last accessed"
-              value={file.last_accessed_at ? moment(file.last_accessed_at).format('MMM D, YYYY • h:mm A') : '—'}
+              value={
+                file.last_accessed_at
+                  ? moment(file.last_accessed_at).format('MMM D, YYYY • h:mm A')
+                  : '—'
+              }
             />
-            <DetailRow label="Shareable" value={file.is_shareable ? 'Yes' : 'No'} />
+            <DetailRow
+              label="Shareable"
+              value={file.is_shareable ? 'Yes' : 'No'}
+            />
           </View>
         </ScrollView>
       )}

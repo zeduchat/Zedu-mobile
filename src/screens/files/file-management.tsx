@@ -20,8 +20,8 @@ const FileManagementScreen: React.FC<Props> = ({ navigation }) => {
   const headerTitle = vm.selectionMode
     ? `${vm.selectedFileIds.size} selected`
     : vm.openFolder
-      ? vm.openFolder.name
-      : 'File Management';
+    ? vm.openFolder.name
+    : 'File Management';
 
   return (
     <Container>

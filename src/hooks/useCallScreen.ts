@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import AgoraService, { AgoraEventHandlers } from '@/services/agora.service';
+import AgoraService from '@/services/agora.service';
 import BuzzService, { getScreenShareAccount } from '@/services/buzz.service';
 import { joinDirectCallAgoraChannel } from '@/services/direct-call-agora-join.service';
-import { isActiveCaller, shouldCancelDirectCallOnHangup } from '@/utils/direct-call-status';
+import {
+  isActiveCaller,
+  shouldCancelDirectCallOnHangup,
+} from '@/utils/direct-call-status';
 import { ShowNotify } from '@/components/ui/toast';
 import { useDataContext } from '@/store/useDataContext';
 import { ACTIONS } from '@/store/types';
@@ -13,564 +15,594 @@ import { Dimensions } from 'react-native';
 import { teardownIosBuzzCallNative } from '@/native/android-call-overlay';
 
 interface UseCallScreenProps {
-    buzzCode: string;
-    buzzData: any;
-    cleanupOnUnmount?: boolean;
-    disableEffect?: boolean;
-    isDirectCall?: boolean;
+  buzzCode: string;
+  buzzData: any;
+  cleanupOnUnmount?: boolean;
+  disableEffect?: boolean;
+  isDirectCall?: boolean;
 }
 
 export const useCallScreen = ({
-    buzzCode,
-    buzzData,
-    cleanupOnUnmount = true,
-    disableEffect = false,
-    isDirectCall = false,
+  buzzCode,
+  buzzData,
+  cleanupOnUnmount = true,
+  disableEffect = false,
+  isDirectCall = false,
 }: UseCallScreenProps) => {
-    const { state, dispatch } = useDataContext();
-    const {buzzParticipants, buzzChats} = state;
-    const isMuted = state?.buzzIsMuted ?? true;
-    const showVideo = state?.buzzShowVideo ?? false;
-    const isScreenSharing = state?.buzzIsScreenSharing ?? false;
-    const joinLoading = state?.buzzJoinLoading ?? false;
-    const [emojiTray, setEmojiTray] = useState(false);
-    const [defaultEmoji, setDefaultEmoji] = useState(false);
-    const [isEndingCall, setIsEndingCall] = useState(false);
+  const { state, dispatch } = useDataContext();
+  const { buzzParticipants, buzzChats: _buzzChats } = state;
+  const isMuted = state?.buzzIsMuted ?? true;
+  const showVideo = state?.buzzShowVideo ?? false;
+  const isScreenSharing = state?.buzzIsScreenSharing ?? false;
+  const joinLoading = state?.buzzJoinLoading ?? false;
+  const [emojiTray, setEmojiTray] = useState(false);
+  const [defaultEmoji, setDefaultEmoji] = useState(false);
+  const [isEndingCall, setIsEndingCall] = useState(false);
 
-    const hasInitialized = useRef(false);
-    const hadRemoteParticipantRef = useRef(false);
-    const clickCountRef = useRef(0);
-    const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const preserveCallOnUnmountRef = useRef(false);
-    const participantsRef = useRef<any[]>(state?.buzzParticipants || []);
-    const pendingRemoteMediaRef = useRef<Record<number, { audioTrack?: boolean; videoTrack?: boolean; screenTrack?: boolean }>>({});
-    const globalParticipants = state?.buzzParticipants || [];
-    const currentUser = state?.user;
+  const hasInitialized = useRef(false);
+  const hadRemoteParticipantRef = useRef(false);
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preserveCallOnUnmountRef = useRef(false);
+  const participantsRef = useRef<any[]>(state?.buzzParticipants || []);
+  const pendingRemoteMediaRef = useRef<
+    Record<
+      number,
+      { audioTrack?: boolean; videoTrack?: boolean; screenTrack?: boolean }
+    >
+  >({});
+  const globalParticipants = state?.buzzParticipants || [];
+  const currentUser = state?.user;
 
-    useEffect(() => {
-        participantsRef.current = state?.buzzParticipants || [];
-    }, [state?.buzzParticipants]);
+  useEffect(() => {
+    participantsRef.current = state?.buzzParticipants || [];
+  }, [state?.buzzParticipants]);
 
-    const updateParticipants = (updater: (participants: any[]) => any[]) => {
-        const latestParticipants = participantsRef.current || [];
-        const updatedParticipants = updater(latestParticipants);
-        participantsRef.current = updatedParticipants;
-        dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updatedParticipants });
-    };
+  const updateParticipants = (updater: (participants: any[]) => any[]) => {
+    const latestParticipants = participantsRef.current || [];
+    const updatedParticipants = updater(latestParticipants);
+    participantsRef.current = updatedParticipants;
+    dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updatedParticipants });
+  };
 
-    const applyRemoteMediaByUid = (
-        uid: number,
-        mediaPatch: { audioTrack?: boolean; videoTrack?: boolean; screenTrack?: boolean },
-    ) => {
-        const userAccount = AgoraService.getUserAccountByUid(uid);
+  const applyRemoteMediaByUid = (
+    uid: number,
+    mediaPatch: {
+      audioTrack?: boolean;
+      videoTrack?: boolean;
+      screenTrack?: boolean;
+    },
+  ) => {
+    const userAccount = AgoraService.getUserAccountByUid(uid);
 
-        if (!userAccount) {
-            const currentPending = pendingRemoteMediaRef.current[uid] || {};
-            pendingRemoteMediaRef.current[uid] = {
-                ...currentPending,
-                ...mediaPatch,
-            };
-            return;
+    if (!userAccount) {
+      const currentPending = pendingRemoteMediaRef.current[uid] || {};
+      pendingRemoteMediaRef.current[uid] = {
+        ...currentPending,
+        ...mediaPatch,
+      };
+      return;
+    }
+
+    const participantUserId = getPrimaryUserIdFromAccount(userAccount);
+    const isScreenShareAccount = userAccount.startsWith('screen-');
+    const normalizedPatch = isScreenShareAccount
+      ? {
+          screenTrack: mediaPatch.screenTrack ?? mediaPatch.videoTrack,
+          ...(mediaPatch.screenTrack || mediaPatch.videoTrack
+            ? { videoTrack: false }
+            : {}),
+          ...(mediaPatch.audioTrack !== undefined
+            ? { audioTrack: mediaPatch.audioTrack }
+            : {}),
         }
+      : mediaPatch;
 
-        const participantUserId = getPrimaryUserIdFromAccount(userAccount);
-        const isScreenShareAccount = userAccount.startsWith('screen-');
-        const normalizedPatch = isScreenShareAccount
-            ? {
-                screenTrack: mediaPatch.screenTrack ?? mediaPatch.videoTrack,
-                ...(mediaPatch.screenTrack || mediaPatch.videoTrack ? { videoTrack: false } : {}),
-                ...(mediaPatch.audioTrack !== undefined ? { audioTrack: mediaPatch.audioTrack } : {}),
-            }
-            : mediaPatch;
+    dispatch({
+      type: ACTIONS.BUZZ_PARTICIPANT_MEDIA_PATCH,
+      payload: {
+        user_id: String(participantUserId),
+        agoraNumericUid: uid,
+        ...normalizedPatch,
+      },
+    });
+  };
 
-        dispatch({
-            type: ACTIONS.BUZZ_PARTICIPANT_MEDIA_PATCH,
-            payload: {
-                user_id: String(participantUserId),
+  const reconcilePendingRemoteMedia = (uid: number, userAccount: string) => {
+    const pendingPatch = pendingRemoteMediaRef.current[uid];
+    const isScreenShareAccount = userAccount.startsWith('screen-');
+    const participantUserId = isScreenShareAccount
+      ? userAccount.slice('screen-'.length)
+      : userAccount;
+
+    dispatch({
+      type: ACTIONS.BUZZ_PARTICIPANT_MEDIA_PATCH,
+      payload: {
+        user_id: String(participantUserId),
+        agoraNumericUid: uid,
+        ...(pendingPatch || {}),
+      },
+    });
+
+    if (pendingPatch) {
+      delete pendingRemoteMediaRef.current[uid];
+    }
+  };
+
+  const ensureScreenShareConnectionReady = async (): Promise<boolean> => {
+    if (!buzzData?.buzz_id || !buzzData?.agora_token?.uid) {
+      return false;
+    }
+
+    if (AgoraService.isScreenShareConnectionJoined()) {
+      return true;
+    }
+
+    const screenAccount = getScreenShareAccount(buzzData.agora_token.uid);
+    const tokenResult = await BuzzService.getBuzzAgoraToken({
+      buzz_id: buzzData.buzz_id,
+      uid: screenAccount,
+    });
+
+    if (tokenResult.error || !tokenResult.data) {
+      console.error(
+        '[AGORA] Failed to fetch screen share token',
+        tokenResult.error,
+      );
+      return false;
+    }
+
+    return AgoraService.ensureScreenShareConnection(
+      tokenResult.data.token,
+      buzzData.buzz_id,
+      screenAccount,
+      tokenResult.data.uid,
+    );
+  };
+
+  const getPrimaryUserIdFromAccount = (userAccount: string): string => {
+    if (userAccount.startsWith('screen-')) {
+      return userAccount.slice('screen-'.length);
+    }
+
+    return userAccount;
+  };
+
+  const syncCurrentUserMediaState = (participants: any[]) => {
+    const myId = currentUser?.user_id ?? currentUser?.id;
+
+    return participants.map((participant: any) => {
+      const participantUserId = participant.user_id ?? participant.id;
+
+      if (String(participantUserId) === String(myId)) {
+        return {
+          ...participant,
+          audioTrack: !isMuted,
+          videoTrack: showVideo && !isScreenSharing,
+          screenTrack: isScreenSharing,
+        };
+      }
+
+      return participant;
+    });
+  };
+
+  useEffect(() => {
+    if (disableEffect) {
+      return;
+    }
+
+    const initializeAgora = async () => {
+      try {
+        if (!buzzData?.agora_token) return;
+
+        AgoraService.setEventHandlers({
+          onUserJoined: () => {
+            hadRemoteParticipantRef.current = true;
+          },
+          onUserOffline: uid => {
+            const userAccount = AgoraService.getUserAccountByUid(uid);
+
+            dispatch({
+              type: ACTIONS.BUZZ_PARTICIPANT_REMOVE,
+              payload: {
+                user_id: userAccount ? String(userAccount) : undefined,
                 agoraNumericUid: uid,
-                ...normalizedPatch,
-            },
-        });
-    };
+              },
+            });
 
-    const reconcilePendingRemoteMedia = (uid: number, userAccount: string) => {
-        const pendingPatch = pendingRemoteMediaRef.current[uid];
-        const isScreenShareAccount = userAccount.startsWith('screen-');
-        const participantUserId = isScreenShareAccount
-            ? userAccount.slice('screen-'.length)
-            : userAccount;
-
-        dispatch({
-            type: ACTIONS.BUZZ_PARTICIPANT_MEDIA_PATCH,
-            payload: {
-                user_id: String(participantUserId),
-                agoraNumericUid: uid,
-                ...(pendingPatch || {}),
-            },
-        });
-
-        if (pendingPatch) {
             delete pendingRemoteMediaRef.current[uid];
-        }
-    };
+          },
+          onUserPublished: (uid, mediaType) => {
+            const userAccount = AgoraService.getUserAccountByUid(uid);
+            const isScreenShareAccount = userAccount?.startsWith('screen-');
 
-    const ensureScreenShareConnectionReady = async (): Promise<boolean> => {
-        if (!buzzData?.buzz_id || !buzzData?.agora_token?.uid) {
-            return false;
-        }
+            if (isScreenShareAccount && mediaType === 'video') {
+              applyRemoteMediaByUid(uid, { screenTrack: true });
+              return;
+            }
 
-        if (AgoraService.isScreenShareConnectionJoined()) {
-            return true;
-        }
+            applyRemoteMediaByUid(uid, {
+              [mediaType === 'audio' ? 'audioTrack' : 'videoTrack']: true,
+            });
+          },
+          onUserUnpublished: (uid, mediaType) => {
+            const userAccount = AgoraService.getUserAccountByUid(uid);
+            const isScreenShareAccount = userAccount?.startsWith('screen-');
 
-        const screenAccount = getScreenShareAccount(buzzData.agora_token.uid);
-        const tokenResult = await BuzzService.getBuzzAgoraToken({
-            buzz_id: buzzData.buzz_id,
-            uid: screenAccount,
-        });
+            if (isScreenShareAccount && mediaType === 'video') {
+              applyRemoteMediaByUid(uid, { screenTrack: false });
+              return;
+            }
 
-        if (tokenResult.error || !tokenResult.data) {
-            console.error('[AGORA] Failed to fetch screen share token', tokenResult.error);
-            return false;
-        }
+            applyRemoteMediaByUid(uid, {
+              [mediaType === 'audio' ? 'audioTrack' : 'videoTrack']: false,
+            });
+          },
+          onUserInfoUpdated: (uid, userAccount) => {
+            reconcilePendingRemoteMedia(uid, userAccount);
+          },
+          onRemoteScreenShareChanged: (uid, sharing) => {
+            applyRemoteMediaByUid(uid, {
+              screenTrack: sharing,
+              ...(sharing ? { videoTrack: false } : {}),
+            });
+          },
+          onLocalScreenShareChanged: sharing => {
+            dispatch({
+              type: ACTIONS.BUZZ_IS_SCREEN_SHARING,
+              payload: sharing,
+            });
 
-        return AgoraService.ensureScreenShareConnection(
-            tokenResult.data.token,
-            buzzData.buzz_id,
-            screenAccount,
-            tokenResult.data.uid,
-        );
-    };
-
-    const getPrimaryUserIdFromAccount = (userAccount: string): string => {
-        if (userAccount.startsWith('screen-')) {
-            return userAccount.slice('screen-'.length);
-        }
-
-        return userAccount;
-    };
-
-    const syncCurrentUserMediaState = (participants: any[]) => {
-        const myId = currentUser?.user_id ?? currentUser?.id;
-
-        return participants.map((participant: any) => {
-            const participantUserId = participant.user_id ?? participant.id;
-
-            if (String(participantUserId) === String(myId)) {
-                return {
+            const myId = currentUser?.user_id ?? currentUser?.id;
+            const updated = (participantsRef.current || []).map(
+              (participant: any) => {
+                const participantUserId = participant.user_id ?? participant.id;
+                if (String(participantUserId) === String(myId)) {
+                  return {
                     ...participant,
-                    audioTrack: !isMuted,
-                    videoTrack: showVideo && !isScreenSharing,
-                    screenTrack: isScreenSharing,
-                };
-            }
+                    screenTrack: sharing,
+                    videoTrack: sharing ? false : showVideo,
+                  };
+                }
+                return participant;
+              },
+            );
 
-            return participant;
+            dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+          },
         });
+
+        const joined = await joinDirectCallAgoraChannel(buzzData, {
+          isMuted,
+          showVideo,
+        });
+
+        if (joined) {
+          const screenReady = await ensureScreenShareConnectionReady();
+          if (!screenReady) {
+            console.warn('[AGORA] Screen share connection pre-join failed');
+          }
+
+          updateParticipants(participants =>
+            syncCurrentUserMediaState(participants),
+          );
+          dispatch({ type: ACTIONS.HAS_JOINED, payload: true });
+        }
+
+        dispatch({ type: ACTIONS.BUZZ_JOIN_LOADING, payload: false });
+      } catch (error) {
+        console.error('[AGORA INIT] Error:', error);
+      }
     };
 
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      initializeAgora();
+    }
+  }, [disableEffect]);
 
-    useEffect(() => {
-        if (disableEffect) {
-            return;
-        }
-        
-        const initializeAgora = async () => {
-            try {
-                if (!buzzData?.agora_token) return;
+  useEffect(() => {
+    if (disableEffect) {
+      return;
+    }
 
-                AgoraService.setEventHandlers({
-                    onUserJoined: () => {
-                        hadRemoteParticipantRef.current = true;
-                    },
-                    onUserOffline: (uid) => {
-                        const userAccount = AgoraService.getUserAccountByUid(uid);
+    return () => {
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
 
-                        dispatch({
-                            type: ACTIONS.BUZZ_PARTICIPANT_REMOVE,
-                            payload: {
-                                user_id: userAccount ? String(userAccount) : undefined,
-                                agoraNumericUid: uid,
-                            },
-                        });
+      if (preserveCallOnUnmountRef.current) {
+        return;
+      }
 
-                        delete pendingRemoteMediaRef.current[uid];
-                    },
-                    onUserPublished: (uid, mediaType) => {
-                        const userAccount = AgoraService.getUserAccountByUid(uid);
-                        const isScreenShareAccount = userAccount?.startsWith('screen-');
+      if (!cleanupOnUnmount) {
+        return;
+      }
 
-                        if (isScreenShareAccount && mediaType === 'video') {
-                            applyRemoteMediaByUid(uid, { screenTrack: true });
-                            return;
-                        }
-
-                        applyRemoteMediaByUid(uid, {
-                            [mediaType === 'audio' ? 'audioTrack' : 'videoTrack']: true,
-                        });
-                    },
-                    onUserUnpublished: (uid, mediaType) => {
-                        const userAccount = AgoraService.getUserAccountByUid(uid);
-                        const isScreenShareAccount = userAccount?.startsWith('screen-');
-
-                        if (isScreenShareAccount && mediaType === 'video') {
-                            applyRemoteMediaByUid(uid, { screenTrack: false });
-                            return;
-                        }
-
-                        applyRemoteMediaByUid(uid, {
-                            [mediaType === 'audio' ? 'audioTrack' : 'videoTrack']: false,
-                        });
-                    },
-                    onUserInfoUpdated: (uid, userAccount) => {
-                        reconcilePendingRemoteMedia(uid, userAccount);
-                    },
-                    onRemoteScreenShareChanged: (uid, sharing) => {
-                        applyRemoteMediaByUid(uid, {
-                            screenTrack: sharing,
-                            ...(sharing ? { videoTrack: false } : {}),
-                        });
-                    },
-                    onLocalScreenShareChanged: (sharing) => {
-                        dispatch({ type: ACTIONS.BUZZ_IS_SCREEN_SHARING, payload: sharing });
-
-                        const myId = currentUser?.user_id ?? currentUser?.id;
-                        const updated = (participantsRef.current || []).map((participant: any) => {
-                            const participantUserId = participant.user_id ?? participant.id;
-                            if (String(participantUserId) === String(myId)) {
-                                return {
-                                    ...participant,
-                                    screenTrack: sharing,
-                                    videoTrack: sharing ? false : showVideo,
-                                };
-                            }
-                            return participant;
-                        });
-
-                        dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-                    },
-                });
-
-                const joined = await joinDirectCallAgoraChannel(buzzData, {
-                    isMuted,
-                    showVideo,
-                });
-
-                if (joined) {
-                    const screenReady = await ensureScreenShareConnectionReady();
-                    if (!screenReady) {
-                        console.warn('[AGORA] Screen share connection pre-join failed');
-                    }
-
-                    updateParticipants((participants) => syncCurrentUserMediaState(participants));
-                    dispatch({ type: ACTIONS.HAS_JOINED, payload: true });
-                }
-
-                dispatch({ type: ACTIONS.BUZZ_JOIN_LOADING, payload: false });
-
-            } catch (error) {
-                console.error('[AGORA INIT] Error:', error);
-            }
-        };
-
-        if (!hasInitialized.current) {
-            hasInitialized.current = true;
-            initializeAgora();
-        }
-    }, [disableEffect]);
-
-    useEffect(() => {
-        if (disableEffect) {
-            return;
-        }
-
-        return () => {
-            if (clickTimerRef.current) {
-                clearTimeout(clickTimerRef.current);
-            }
-
-            if (preserveCallOnUnmountRef.current) {
-                return;
-            }
-
-            if (!cleanupOnUnmount) {
-                return;
-            }
-
-            AgoraService.leaveChannel().catch(console.error);
-            AgoraService.release().catch(console.error);
-        };
-    }, [cleanupOnUnmount, disableEffect]);
-
-    const handleToggleMic = async () => {
-        try {
-            const newState = !isMuted;
-            const enableAudio = !newState;
-
-            await AgoraService.toggleMicrophone(enableAudio);
-            dispatch({ type: ACTIONS.BUZZ_IS_MUTED, payload: newState });
-
-            const updated = globalParticipants.map((p: any) => {
-                const userId = p.user_id ?? p.id;
-                const myId = currentUser?.user_id ?? currentUser?.id;
-                if (String(userId) === String(myId)) {
-                    return { ...p, audioTrack: enableAudio };
-                }
-                return p;
-            });
-            
-            dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-        } catch (error) {
-            console.error('Toggle mic failed', error);
-        }
+      AgoraService.leaveChannel().catch(console.error);
+      AgoraService.release().catch(console.error);
     };
+  }, [cleanupOnUnmount, disableEffect]);
 
-    const handleToggleVideo = async () => {
-        try {
-            const newState = !showVideo;
+  const handleToggleMic = async () => {
+    try {
+      const newState = !isMuted;
+      const enableAudio = !newState;
 
-            if (isScreenSharing && newState) {
-                ShowNotify('Info', 'Stop screen sharing to turn on camera');
-                return;
-            }
+      await AgoraService.toggleMicrophone(enableAudio);
+      dispatch({ type: ACTIONS.BUZZ_IS_MUTED, payload: newState });
 
-           const res =  await AgoraService.toggleCamera(newState);
-            dispatch({ type: ACTIONS.BUZZ_SHOW_VIDEO, payload: newState });
-
-            const updated = globalParticipants.map((p: any) => {
-                const userId = p.user_id;
-                const myId = currentUser?.user_id
-
-                if (String(userId) === String(myId)) {
-                    return { ...p, videoTrack: newState };
-                }
-                return p;
-            });
-
-            dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-        } catch (error) {
-            console.error('Toggle video failed', error);
+      const updated = globalParticipants.map((p: any) => {
+        const userId = p.user_id ?? p.id;
+        const myId = currentUser?.user_id ?? currentUser?.id;
+        if (String(userId) === String(myId)) {
+          return { ...p, audioTrack: enableAudio };
         }
-    };
+        return p;
+      });
 
-    const handleEndCall = async () => {
-        if (isEndingCall) return;
-        preserveCallOnUnmountRef.current = true;
-        setIsEndingCall(true);
-        try {
-            const currentUserId = String(currentUser?.user_id ?? currentUser?.id ?? '');
-            const shouldCancel =
-                isDirectCall &&
-                isActiveCaller(buzzParticipants, currentUserId) &&
-                shouldCancelDirectCallOnHangup(buzzParticipants, {
-                    hadRemoteParticipant: hadRemoteParticipantRef.current,
-                });
+      dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+    } catch (error) {
+      console.error('Toggle mic failed', error);
+    }
+  };
 
-            if (shouldCancel) {
-                const buzzId = String(buzzData?.buzz_id || '');
-                if (!buzzId) {
-                    ShowNotify('Error', 'Call ID is missing');
-                } else {
-                    const cancelResult = await BuzzService.respondToDirectCall(buzzId, 'cancel');
-                    if (cancelResult.error) {
-                        ShowNotify('Error', cancelResult.error || 'Failed to cancel call');
-                    }
-                }
-            } else {
-                await BuzzService.leaveBuzz(buzzCode);
+  const handleToggleVideo = async () => {
+    try {
+      const newState = !showVideo;
 
-                const isDirectCallCallerEnding =
-                    isDirectCall && isActiveCaller(buzzParticipants, currentUserId);
+      if (isScreenSharing && newState) {
+        ShowNotify('Info', 'Stop screen sharing to turn on camera');
+        return;
+      }
 
-                if (isDirectCallCallerEnding || (buzzParticipants || []).length === 1) {
-                    await BuzzService.endBuzz(buzzCode);
-                }
-            }
+      const _res = await AgoraService.toggleCamera(newState);
+      dispatch({ type: ACTIONS.BUZZ_SHOW_VIDEO, payload: newState });
 
-            await AgoraService.stopAllLocalMedia();
-            await AgoraService.leaveChannel();
-            await AgoraService.release();
+      const updated = globalParticipants.map((p: any) => {
+        const userId = p.user_id;
+        const myId = currentUser?.user_id;
 
-            await teardownIosBuzzCallNative({
-                buzzCode,
-                buzzId: String(buzzData?.buzz_id || ''),
-                title: String(buzzData?.buzz_code || buzzData?.title || 'Buzz call'),
-            });
-
-            await resetDirectCallSession(dispatch, {
-                buzzId: String(buzzData?.buzz_id || ''),
-            });
-
-        } catch (error) {
-            console.error('End call error:', error);
-            ShowNotify('Error', 'Failed to end call');
-        } finally {
-            setIsEndingCall(false);
+        if (String(userId) === String(myId)) {
+          return { ...p, videoTrack: newState };
         }
-    };
+        return p;
+      });
 
-    const handleRejoinCall = async () => {
-        try {
-            const result = await BuzzService.joinBuzz(buzzCode);
+      dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+    } catch (error) {
+      console.error('Toggle video failed', error);
+    }
+  };
 
-            if (result.data) {
-                dispatch({ type: ACTIONS.BUZZ_DATA, payload: result.data });
-                dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: result.data.participants });
-                dispatch({ type: ACTIONS.HAS_JOINED, payload: true });
-            }
+  const handleEndCall = async () => {
+    if (isEndingCall) return;
+    preserveCallOnUnmountRef.current = true;
+    setIsEndingCall(true);
+    try {
+      const currentUserId = String(
+        currentUser?.user_id ?? currentUser?.id ?? '',
+      );
+      const shouldCancel =
+        isDirectCall &&
+        isActiveCaller(buzzParticipants, currentUserId) &&
+        shouldCancelDirectCallOnHangup(buzzParticipants, {
+          hadRemoteParticipant: hadRemoteParticipantRef.current,
+        });
 
-        } catch (error) {
-            console.error('Rejoin call error:', error);
-            ShowNotify('Error', 'Failed to rejoin call');
+      if (shouldCancel) {
+        const buzzId = String(buzzData?.buzz_id || '');
+        if (!buzzId) {
+          ShowNotify('Error', 'Call ID is missing');
+        } else {
+          const cancelResult = await BuzzService.respondToDirectCall(
+            buzzId,
+            'cancel',
+          );
+          if (cancelResult.error) {
+            ShowNotify('Error', cancelResult.error || 'Failed to cancel call');
+          }
         }
-    };
+      } else {
+        await BuzzService.leaveBuzz(buzzCode);
 
-    const handleEmojiSelect = async (emojiObject: any, anchor?: { x: number; y: number }) => {
-        const emoji = emojiObject?.emoji || emojiObject?.native;
-        if (!emoji || !buzzData?.buzz_id) return;
+        const isDirectCallCallerEnding =
+          isDirectCall && isActiveCaller(buzzParticipants, currentUserId);
 
-        clickCountRef.current += 1;
+        if (isDirectCallCallerEnding || (buzzParticipants || []).length === 1) {
+          await BuzzService.endBuzz(buzzCode);
+        }
+      }
 
-        if (clickTimerRef.current) {
-            clearTimeout(clickTimerRef.current);
+      await AgoraService.stopAllLocalMedia();
+      await AgoraService.leaveChannel();
+      await AgoraService.release();
+
+      await teardownIosBuzzCallNative({
+        buzzCode,
+        buzzId: String(buzzData?.buzz_id || ''),
+        title: String(buzzData?.buzz_code || buzzData?.title || 'Buzz call'),
+      });
+
+      await resetDirectCallSession(dispatch, {
+        buzzId: String(buzzData?.buzz_id || ''),
+      });
+    } catch (error) {
+      console.error('End call error:', error);
+      ShowNotify('Error', 'Failed to end call');
+    } finally {
+      setIsEndingCall(false);
+    }
+  };
+
+  const handleRejoinCall = async () => {
+    try {
+      const result = await BuzzService.joinBuzz(buzzCode);
+
+      if (result.data) {
+        dispatch({ type: ACTIONS.BUZZ_DATA, payload: result.data });
+        dispatch({
+          type: ACTIONS.BUZZ_PARTICIPANTS,
+          payload: result.data.participants,
+        });
+        dispatch({ type: ACTIONS.HAS_JOINED, payload: true });
+      }
+    } catch (error) {
+      console.error('Rejoin call error:', error);
+      ShowNotify('Error', 'Failed to rejoin call');
+    }
+  };
+
+  const handleEmojiSelect = async (
+    emojiObject: any,
+    anchor?: { x: number; y: number },
+  ) => {
+    const emoji = emojiObject?.emoji || emojiObject?.native;
+    if (!emoji || !buzzData?.buzz_id) return;
+
+    clickCountRef.current += 1;
+
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 1000);
+
+    const isBursting = clickCountRef.current > 5;
+    const spawnAmount = isBursting ? 3 : 1;
+    const { width, height } = Dimensions.get('window');
+    const originX = anchor?.x ?? width / 2;
+    const originY = anchor?.y ?? height - 140;
+
+    for (let i = 0; i < spawnAmount; i++) {
+      const id = Date.now() + Math.random();
+      const newFloatingEmoji = {
+        id,
+        emoji,
+        x: originX,
+        y: originY,
+        name: currentUser?.full_name || currentUser?.username || 'You',
+        jitter: (Math.random() - 0.5) * (isBursting ? 200 : 60),
+      };
+
+      dispatch({ type: ACTIONS.ADD_FLOATING_EMOJI, payload: newFloatingEmoji });
+
+      setTimeout(() => {
+        dispatch({ type: ACTIONS.REMOVE_FLOATING_EMOJI, payload: id });
+      }, 1800);
+    }
+
+    if (clickCountRef.current % 3 === 1 || !isBursting) {
+      const response = await PostRequest(`/buzz/${buzzData.buzz_id}/reaction`, {
+        reaction_type: 'emoji',
+        content: emoji,
+      });
+
+      if (response?.error) {
+        ShowNotify('Error', 'Failed to send reaction');
+      }
+    }
+  };
+
+  const handleClose = () => {
+    setDefaultEmoji(false);
+    setEmojiTray(false);
+  };
+
+  const handleToggleScreenShare = async () => {
+    try {
+      const newState = !isScreenSharing;
+
+      if (newState) {
+        if (!buzzData?.buzz_id || !buzzData?.agora_token?.uid) {
+          ShowNotify('Error', 'Unable to start screen sharing right now.');
+          return;
         }
 
-        clickTimerRef.current = setTimeout(() => {
-            clickCountRef.current = 0;
-        }, 1000);
+        const screenReady = await ensureScreenShareConnectionReady();
+        if (!screenReady) {
+          ShowNotify('Error', 'Failed to prepare screen share connection');
+          return;
+        }
 
-        const isBursting = clickCountRef.current > 5;
-        const spawnAmount = isBursting ? 3 : 1;
-        const { width, height } = Dimensions.get('window');
-        const originX = anchor?.x ?? width / 2;
-        const originY = anchor?.y ?? height - 140;
+        const result = await AgoraService.startScreenCapture();
+        if (!result) {
+          ShowNotify('Error', 'Failed to start screen share');
+          return;
+        }
 
-        for (let i = 0; i < spawnAmount; i++) {
-            const id = Date.now() + Math.random();
-            const newFloatingEmoji = {
-                id,
-                emoji,
-                x: originX,
-                y: originY,
-                name: currentUser?.full_name || currentUser?.username || 'You',
-                jitter: (Math.random() - 0.5) * (isBursting ? 200 : 60),
+        dispatch({ type: ACTIONS.BUZZ_IS_SCREEN_SHARING, payload: true });
+
+        const myId = currentUser?.user_id ?? currentUser?.id;
+        const updated = globalParticipants.map((participant: any) => {
+          const participantUserId = participant.user_id ?? participant.id;
+          if (String(participantUserId) === String(myId)) {
+            return {
+              ...participant,
+              screenTrack: true,
+              videoTrack: false,
             };
+          }
+          return participant;
+        });
 
-            dispatch({ type: ACTIONS.ADD_FLOATING_EMOJI, payload: newFloatingEmoji });
-
-            setTimeout(() => {
-                dispatch({ type: ACTIONS.REMOVE_FLOATING_EMOJI, payload: id });
-            }, 1800);
+        dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+      } else {
+        const result = await AgoraService.stopScreenCapture(showVideo);
+        if (!result) {
+          ShowNotify('Error', 'Failed to stop screen share');
+          return;
         }
 
-        if (clickCountRef.current % 3 === 1 || !isBursting) {
-            const response = await PostRequest(`/buzz/${buzzData.buzz_id}/reaction`, {
-                reaction_type: 'emoji',
-                content: emoji,
-            });
+        dispatch({ type: ACTIONS.BUZZ_IS_SCREEN_SHARING, payload: false });
 
-            if (response?.error) {
-                ShowNotify('Error', 'Failed to send reaction');
-            }
-        }
-    };
+        const myId = currentUser?.user_id ?? currentUser?.id;
+        const updated = globalParticipants.map((participant: any) => {
+          const participantUserId = participant.user_id ?? participant.id;
+          if (String(participantUserId) === String(myId)) {
+            return {
+              ...participant,
+              screenTrack: false,
+              videoTrack: showVideo,
+            };
+          }
+          return participant;
+        });
 
-    const handleClose = () => {
-        setDefaultEmoji(false);
-        setEmojiTray(false);
-    };
+        dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
+      }
+    } catch (error) {
+      console.error('Screen share toggle failed', error);
+      ShowNotify('Error', 'Screen share not available');
+    }
+  };
 
-    const handleToggleScreenShare = async () => {
-        try {
-            const newState = !isScreenSharing;
+  const prepareForMinimize = () => {
+    preserveCallOnUnmountRef.current = true;
+  };
 
-            if (newState) {
-                if (!buzzData?.buzz_id || !buzzData?.agora_token?.uid) {
-                    ShowNotify('Error', 'Unable to start screen sharing right now.');
-                    return;
-                }
-
-                const screenReady = await ensureScreenShareConnectionReady();
-                if (!screenReady) {
-                    ShowNotify('Error', 'Failed to prepare screen share connection');
-                    return;
-                }
-
-                const result = await AgoraService.startScreenCapture();
-                if (!result) {
-                    ShowNotify('Error', 'Failed to start screen share');
-                    return;
-                }
-
-                dispatch({ type: ACTIONS.BUZZ_IS_SCREEN_SHARING, payload: true });
-
-                const myId = currentUser?.user_id ?? currentUser?.id;
-                const updated = globalParticipants.map((participant: any) => {
-                    const participantUserId = participant.user_id ?? participant.id;
-                    if (String(participantUserId) === String(myId)) {
-                        return {
-                            ...participant,
-                            screenTrack: true,
-                            videoTrack: false,
-                        };
-                    }
-                    return participant;
-                });
-
-                dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-            } else {
-                const result = await AgoraService.stopScreenCapture(showVideo);
-                if (!result) {
-                    ShowNotify('Error', 'Failed to stop screen share');
-                    return;
-                }
-
-                dispatch({ type: ACTIONS.BUZZ_IS_SCREEN_SHARING, payload: false });
-
-                const myId = currentUser?.user_id ?? currentUser?.id;
-                const updated = globalParticipants.map((participant: any) => {
-                    const participantUserId = participant.user_id ?? participant.id;
-                    if (String(participantUserId) === String(myId)) {
-                        return {
-                            ...participant,
-                            screenTrack: false,
-                            videoTrack: showVideo,
-                        };
-                    }
-                    return participant;
-                });
-
-                dispatch({ type: ACTIONS.BUZZ_PARTICIPANTS, payload: updated });
-            }
-        } catch (error) {
-            console.error('Screen share toggle failed', error);
-            ShowNotify('Error', 'Screen share not available');
-        }
-    };
-
-    const prepareForMinimize = () => {
-        preserveCallOnUnmountRef.current = true;
-    };
-
-    return {
-        isMuted,
-        showVideo,
-        emojiTray,
-        defaultEmoji,
-        isEndingCall,
-        isScreenSharing,
-        globalParticipants,
-        currentUser,
-        handleToggleMic,
-        handleToggleVideo,
-        handleEndCall,
-        handleRejoinCall,
-        handleEmojiSelect,
-        handleClose,
-        handleToggleScreenShare,
-        prepareForMinimize,
-        setDefaultEmoji,
-        setEmojiTray,
-        joinLoading
-    };
+  return {
+    isMuted,
+    showVideo,
+    emojiTray,
+    defaultEmoji,
+    isEndingCall,
+    isScreenSharing,
+    globalParticipants,
+    currentUser,
+    handleToggleMic,
+    handleToggleVideo,
+    handleEndCall,
+    handleRejoinCall,
+    handleEmojiSelect,
+    handleClose,
+    handleToggleScreenShare,
+    prepareForMinimize,
+    setDefaultEmoji,
+    setEmojiTray,
+    joinLoading,
+  };
 };

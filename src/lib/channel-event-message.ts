@@ -17,7 +17,9 @@ type ChannelEventMessageSource = {
   status?: string | null;
 };
 
-export const isChannelEventThreadMessage = (item: ChannelEventMessageSource): boolean => {
+export const isChannelEventThreadMessage = (
+  item: ChannelEventMessageSource,
+): boolean => {
   return item?.type === 'thread' && Boolean(item?.event_name?.trim());
 };
 
@@ -32,7 +34,7 @@ const normalizeEventMessageBody = (raw: string): string => {
 const parseKeyValueLines = (body: string): ChannelEventMessageField[] => {
   const fields: ChannelEventMessageField[] = [];
 
-  body.split('\n').forEach((line) => {
+  body.split('\n').forEach(line => {
     const trimmed = line.trim();
     if (!trimmed) {
       return;

@@ -7,13 +7,13 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const scale = SCREEN_WIDTH / 375;
 
 export function normalize(size: number) {
-    const newSize = size * scale;
+  const newSize = size * scale;
 
-    if (Platform.OS === 'ios') {
-        return Math.round(PixelRatio.roundToNearestPixel(newSize));
-    } else {
-        // Android rendering can be slightly smaller, so we add a tiny offset
-        // to match the visual "weight" of iOS fonts.
-        return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 1;
-    }
+  if (Platform.OS === 'ios') {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize));
+  } else {
+    // Android rendering can be slightly smaller, so we add a tiny offset
+    // to match the visual "weight" of iOS fonts.
+    return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 1;
+  }
 }
